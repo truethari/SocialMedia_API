@@ -1,0 +1,26 @@
+[
+    {
+        "id": "U1",
+        "fName": "Demo",
+        "lName": "User 1",
+        "email": "demo1@mail.com",
+        "birthday": "2000-01-01",
+        "gender": "M"
+    },
+    {
+        "id": "U2",
+        "fName": "Demo",
+        "lName": "User 2",
+        "email": "demo2@mail.com",
+        "birthday": "2000-01-01",
+        "gender": "F"
+    },
+    {
+        "id": "U3",
+        "fName": "Demo",
+        "lName": "User 3",
+        "email": "demoe3@mail.com",
+        "birthday": "2000-01-01",
+        "gender": "O"
+    }
+]

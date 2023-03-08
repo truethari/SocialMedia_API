@@ -1,0 +1,16 @@
+[
+    {
+        "id": "C1",
+        "post": "P1",
+        "user": "U1",
+        "time": "2019-01-01T00:00:00Z",
+        "content": "Hello World!"
+    },
+    {
+        "id": "C2",
+        "post": "P1",
+        "user": "U2",
+        "time": "2019-01-01T00:00:00Z",
+        "content": "Hello World!"
+    }
+]
