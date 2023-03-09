@@ -1,18 +1,12 @@
 const express = require("express");
-
-const users = require("./assets/data/users.json");
-const posts = require("./assets/data/posts.json");
-const comments = require("./assets/data/comments.json");
+const users = require("./routes/users");
+const posts = require("./routes/posts");
+const comments = require("./routes/comments");
 
 const app = express();
 
-app.get("/api/users", (req, res) => {
-    res.json(users);
-});
-
-app.get("/api/posts", (req, res) => {
-    res.json(posts);
-});
+app.use("/api/users", users);
+app.use("/api/posts", posts);
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
