@@ -1,26 +1,29 @@
 [
     {
-        "id": "U1",
+        "id": 1,
         "fName": "Demo",
         "lName": "User 1",
         "email": "demo1@mail.com",
         "birthday": "2000-01-01",
-        "gender": "M"
+        "gender": "M",
+        "status": "active"
     },
     {
-        "id": "U2",
+        "id": 2,
         "fName": "Demo",
         "lName": "User 2",
         "email": "demo2@mail.com",
         "birthday": "2000-01-01",
-        "gender": "F"
+        "gender": "F",
+        "status": "active"
     },
     {
-        "id": "U3",
+        "id": 3,
         "fName": "Demo",
         "lName": "User 3",
         "email": "demoe3@mail.com",
         "birthday": "2000-01-01",
-        "gender": "O"
+        "gender": "O",
+        "status": "active"
     }
 ]
