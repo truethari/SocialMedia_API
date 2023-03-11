@@ -1,7 +1,6 @@
 const express = require("express");
 const users = require("./routes/users");
 const posts = require("./routes/posts");
-const comments = require("./routes/comments");
 
 const app = express();
 
