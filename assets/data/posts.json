@@ -1,16 +1,14 @@
 [
     {
-        "id": "P1",
+        "id": 1,
         "user": "U1",
-        "time": "2019-02-03T23:00:00Z",
-        "content": "Hello Post 1",
+        "body": "Hello Post 1",
         "tags": ["U2", "U3"]
     },
     {
-        "id": "P2",
+        "id": 2,
         "user": "U2",
-        "time": "2019-02-03T23:00:00Z",
-        "content": "Hello Post 2",
+        "body": "Hello Post 2",
         "tags": ["U1", "U3"]
     }
 ]
