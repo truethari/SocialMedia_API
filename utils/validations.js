@@ -7,6 +7,7 @@ function validateUser(user) {
         email: Joi.string().required().email(),
         birthday: Joi.date().required(),
         gender: Joi.string().required(),
+        password: Joi.string().required(),
     });
 
     return schema.validate(user);
