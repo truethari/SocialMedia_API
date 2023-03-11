@@ -1,9 +1,9 @@
 const express = require("express");
-const Joi = require("joi");
 const router = express.Router();
 
 router.use(express.json());
 
+const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
 
 router.get("/", (req, res) => {
@@ -20,29 +20,6 @@ router.get("/:id", (req, res) => {
             msg: `No user with the id of ${req.params.id}`,
         });
     }
-});
-
-router.post("/", (req, res) => {
-    const { error } = validateUser(req.body);
-
-    if (error) {
-        return res.status(400).json({
-            msg: error.details[0].message,
-        });
-    }
-
-    const newUser = {
-        id: users.length + 1,
-        fName: req.body.fName,
-        lName: req.body.lName,
-        email: req.body.email,
-        birthday: req.body.birthday,
-        gender: req.body.gender,
-        status: "active",
-    };
-
-    users.push(newUser);
-    res.json(users);
 });
 
 router.put("/:id", (req, res) => {
@@ -94,17 +71,5 @@ router.delete("/:id", (req, res) => {
         });
     }
 });
-
-function validateUser(user) {
-    const schema = Joi.object({
-        fName: Joi.string().required(),
-        lName: Joi.string().required(),
-        email: Joi.string().required().email(),
-        birthday: Joi.date().required(),
-        gender: Joi.string().required(),
-    });
-
-    return schema.validate(user);
-}
 
 module.exports = router;
