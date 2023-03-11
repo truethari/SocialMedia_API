@@ -6,7 +6,8 @@
         "email": "demo1@mail.com",
         "birthday": "2000-01-01",
         "gender": "M",
-        "status": "active"
+        "status": "active",
+        "password": "$2b$10$0xEJdtXZerpxjyH8xp0hr.jvMfQIiXgOPEcNkotG0g4mDnQ7dnMsa"
     },
     {
         "id": 2,
@@ -15,7 +16,8 @@
         "email": "demo2@mail.com",
         "birthday": "2000-01-01",
         "gender": "F",
-        "status": "active"
+        "status": "active",
+        "password": "$2b$10$0xEJdtXZerpxjyH8xp0hr.jvMfQIiXgOPEcNkotG0g4mDnQ7dnMsa"
     },
     {
         "id": 3,
@@ -24,6 +26,7 @@
         "email": "demoe3@mail.com",
         "birthday": "2000-01-01",
         "gender": "O",
-        "status": "active"
+        "status": "active",
+        "password": "$2b$10$0xEJdtXZerpxjyH8xp0hr.jvMfQIiXgOPEcNkotG0g4mDnQ7dnMsa"
     }
 ]

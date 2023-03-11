@@ -5,11 +5,31 @@ const router = express.Router();
 
 router.use(express.json());
 
-const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
 
-router.get("/", async (req, res) => {
-    res.json(users);
+router.post("/", async (req, res) => {
+    const found = users.some((user) => user.id === req.body.id);
+
+    if (!found) {
+        return res.status(400).json({
+            msg: `No user with the id of ${req.body.id}`,
+        });
+    }
+
+    const user = users.filter((user) => user.id === req.body.id);
+
+    const match = await bcrypt.compare(req.body.password, user[0].password);
+
+    if (!match) {
+        return res.status(400).json({
+            msg: "Invalid credentials",
+        });
+    } else {
+        res.json({
+            msg: "User authenticated",
+            user,
+        });
+    }
 });
 
 module.exports = router;
