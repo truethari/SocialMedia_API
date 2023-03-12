@@ -3,8 +3,6 @@ const Joi = require("joi");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
-router.use(express.json());
-
 const posts = require("../assets/data/posts.json");
 const comments = require("../assets/data/comments.json");
 

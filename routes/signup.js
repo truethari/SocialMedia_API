@@ -3,8 +3,6 @@ const bcrypt = require("bcrypt");
 
 const router = express.Router();
 
-router.use(express.json());
-
 const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
 

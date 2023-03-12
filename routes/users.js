@@ -3,10 +3,13 @@ const router = express.Router();
 
 const auth = require("../middleware/auth");
 
-router.use(express.json());
-
 const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
+
+router.get("/me", auth, (req, res) => {
+    const user = users.filter((user) => user.id === req.user._id);
+    res.json(user);
+});
 
 router.get("/", auth, (req, res) => {
     res.json(users);

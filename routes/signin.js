@@ -5,8 +5,6 @@ const bcrypt = require("bcrypt");
 
 const router = express.Router();
 
-router.use(express.json());
-
 const users = require("../assets/data/users.json");
 
 router.post("/", async (req, res) => {
