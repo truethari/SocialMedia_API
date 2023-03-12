@@ -1,16 +1,18 @@
 const express = require("express");
 const router = express.Router();
 
+const auth = require("../middleware/auth");
+
 router.use(express.json());
 
 const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
 
-router.get("/", (req, res) => {
+router.get("/", auth, (req, res) => {
     res.json(users);
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", auth, (req, res) => {
     const found = users.some((user) => user.id === parseInt(req.params.id));
 
     if (found) {
@@ -22,7 +24,7 @@ router.get("/:id", (req, res) => {
     }
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", auth, (req, res) => {
     const { error } = validateUser(req.body);
 
     if (error) {
@@ -57,7 +59,7 @@ router.put("/:id", (req, res) => {
     }
 });
 
-router.delete("/:id", (req, res) => {
+router.delete("/:id", auth, (req, res) => {
     const found = users.some((user) => user.id === parseInt(req.params.id));
 
     if (found) {

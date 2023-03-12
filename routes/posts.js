@@ -1,6 +1,7 @@
 const express = require("express");
 const Joi = require("joi");
 const router = express.Router();
+const auth = require("../middleware/auth");
 
 router.use(express.json());
 
@@ -12,17 +13,18 @@ router.get("/", (req, res) => {
 });
 
 const middleware = {
+    auth,
     checkPostExists,
     checkCommentExists,
 };
 
-router.get("/:id", checkPostExists, (req, res) => {
+router.get("/:id", auth, checkPostExists, (req, res) => {
     checkPostExists(req, res);
 
     res.json(posts.filter((post) => post.id === parseInt(req.params.id)));
 });
 
-router.post("/", (req, res) => {
+router.post("/", auth, (req, res) => {
     const { error } = validatePost(req.body);
 
     if (error) {
@@ -40,7 +42,7 @@ router.post("/", (req, res) => {
     res.json(posts);
 });
 
-router.put("/:id", (req, res) => {
+router.put("/:id", auth, (req, res) => {
     const { error } = validatePost(req.body);
 
     if (error) {
@@ -62,22 +64,32 @@ router.put("/:id", (req, res) => {
     });
 });
 
-router.delete("/:id", checkPostExists, (req, res) => {
+router.delete("/:id", auth, checkPostExists, (req, res) => {
     res.json({
         msg: "Post deleted",
         posts: posts.filter((post) => post.id !== parseInt(req.params.id)),
     });
 });
 
-router.get("/:id/comments", checkPostExists, (req, res) => {
-    res.json(
-        comments.filter((comment) => comment.post === parseInt(req.params.id))
-    );
-});
+router.get(
+    "/:id/comments",
+    [middleware.auth, middleware.checkPostExists],
+    (req, res) => {
+        res.json(
+            comments.filter(
+                (comment) => comment.post === parseInt(req.params.id)
+            )
+        );
+    }
+);
 
 router.get(
     "/:id/comments/:commentId",
-    [middleware.checkPostExists, middleware.checkCommentExists],
+    [
+        middleware.auth,
+        middleware.checkPostExists,
+        middleware.checkCommentExists,
+    ],
     (req, res) => {
         const comment = comments.filter(
             (comment) =>
@@ -89,21 +101,29 @@ router.get(
     }
 );
 
-router.post("/:id/comments", checkPostExists, (req, res) => {
-    const newComment = {
-        id: comments.length + 1,
-        post: parseInt(req.params.id),
-        user: req.body.user,
-        body: req.body.body,
-    };
+router.post(
+    "/:id/comments",
+    [middleware.auth, middleware.checkPostExists],
+    (req, res) => {
+        const newComment = {
+            id: comments.length + 1,
+            post: parseInt(req.params.id),
+            user: req.body.user,
+            body: req.body.body,
+        };
 
-    comments.push(newComment);
-    res.json(comments);
-});
+        comments.push(newComment);
+        res.json(comments);
+    }
+);
 
 router.put(
     "/:id/comments/:commentId",
-    [middleware.checkPostExists, middleware.checkCommentExists],
+    [
+        middleware.auth,
+        middleware.checkPostExists,
+        middleware.checkCommentExists,
+    ],
     (req, res) => {
         const updatedComment = req.body;
         comments.forEach((comment) => {
@@ -129,7 +149,11 @@ router.put(
 
 router.delete(
     "/:id/comments/:commentId",
-    [middleware.checkPostExists, middleware.checkCommentExists],
+    [
+        middleware.auth,
+        middleware.checkPostExists,
+        middleware.checkCommentExists,
+    ],
     (req, res) => {
         res.json({
             msg: "Comment deleted",

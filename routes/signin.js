@@ -27,10 +27,13 @@ router.post("/", async (req, res) => {
             msg: "Invalid credentials",
         });
     } else {
-        res.json({
+        const token = jwt.sign(
+            { _id: user[0].id },
+            config.get("jwtPrivateKey")
+        );
+        res.header("x-auth-token", token).json({
             msg: "User authenticated",
             user,
-            token: jwt.sign({ _id: user[0].id }, config.get("jwtPrivateKey")),
         });
     }
 });
