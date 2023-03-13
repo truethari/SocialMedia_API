@@ -4,7 +4,9 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "jest --watchAll"
+        "start": "node index",
+        "dev": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& node index",
+        "test": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& jest --watchAll --coverage"
     },
     "repository": {
         "type": "git",

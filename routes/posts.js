@@ -117,6 +117,12 @@ router.post(
     "/:id/comments",
     [middleware.auth, middleware.checkPostExists],
     (req, res) => {
+        const { error } = validateComment(req.body);
+
+        if (error) {
+            return res.status(400).send(error.details[0].message);
+        }
+
         const newComment = {
             id: comments.length + 1,
             post: parseInt(req.params.id),
@@ -137,6 +143,12 @@ router.put(
         middleware.checkCommentExists,
     ],
     (req, res) => {
+        const { error } = validateComment(req.body);
+
+        if (error) {
+            return res.status(400).send(error.details[0].message);
+        }
+
         const updatedComment = req.body;
         comments.forEach((comment) => {
             if (
@@ -186,6 +198,15 @@ function validatePost(post) {
     });
 
     return schema.validate(post);
+}
+
+function validateComment(comment) {
+    const schema = Joi.object({
+        user: Joi.number().required(),
+        body: Joi.string().min(3).required(),
+    });
+
+    return schema.validate(comment);
 }
 
 function checkPostExists(req, res, next) {

@@ -1,9 +1,10 @@
-const server = require("../../index");
 const request = require("supertest");
+
+let server;
 
 describe("/api/posts", () => {
     beforeEach(() => {
-        server;
+        server = require("../../index");
     });
 
     afterEach(() => {
@@ -170,6 +171,129 @@ describe("/api/posts", () => {
 
         it("should return 200 if post is deleted", async () => {
             const res = await request(server).delete("/api/posts/1");
+            expect(res.status).toBe(200);
+        });
+    });
+
+    describe("GET /:id/comments", () => {
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server).get("/api/posts/10/comments");
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 200 if id is valid", async () => {
+            const res = await request(server).get("/api/posts/1/comments");
+            expect(res.status).toBe(200);
+        });
+
+        it("should return all comments for a post", async () => {
+            const res = await request(server).get("/api/posts/1/comments");
+            expect(res.body).toHaveLength(2);
+        });
+
+        it("should return all comments for a post", async () => {
+            const res = await request(server).get("/api/posts/1/comments");
+            expect(res.body[0]).toHaveProperty("id", 1);
+        });
+
+        it("should return all comments for a post", async () => {
+            const res = await request(server).get("/api/posts/1/comments");
+            expect(res.body[1]).toHaveProperty("id", 2);
+        });
+    });
+
+    describe("GET /:id/comments/:id", () => {
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server).get("/api/posts/1/comments/10");
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server).get("/api/posts/1/comments/e");
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 200 if id is valid", async () => {
+            const res = await request(server).get("/api/posts/1/comments/1");
+            expect(res.status).toBe(200);
+        });
+    });
+
+    describe("POST /:id/comments", () => {
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server)
+                .post("/api/posts/10/comments")
+                .send({ user: 10, body: "Hello Post" });
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 400 if body is invalid", async () => {
+            const res = await request(server)
+                .post("/api/posts/1/comments")
+                .send({ user: 10, body: "" });
+            expect(res.status).toBe(400);
+        });
+
+        it("should return 400 if body is invalid", async () => {
+            const res = await request(server)
+                .post("/api/posts/1/comments")
+                .send({ user: 10 });
+            expect(res.status).toBe(400);
+        });
+
+        it("should return 200 if comment is valid", async () => {
+            const res = await request(server)
+                .post("/api/posts/1/comments")
+                .send({ user: 10, body: "Hello Post" });
+            expect(res.status).toBe(200);
+        });
+    });
+
+    describe("PUT /:id/comments/:id", () => {
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server)
+                .put("/api/posts/1/comments/10")
+                .send({ body: "Hello Post 3" });
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server)
+                .put("/api/posts/1/comments/e")
+                .send({ body: "Hello Post 3" });
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 400 if body is invalid", async () => {
+            const res = await request(server)
+                .put("/api/posts/1/comments/1")
+                .send({ body: "" });
+            expect(res.status).toBe(400);
+        });
+
+        it("should return 200 if comment is updated", async () => {
+            const res = await request(server)
+                .put("/api/posts/1/comments/1")
+                .send({ user: 1, body: "Hello Post 3" });
+            expect(res.status).toBe(200);
+        });
+    });
+
+    describe("DELETE /:id/comments/:id", () => {
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server).delete(
+                "/api/posts/1/comments/10"
+            );
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 404 if id is invalid", async () => {
+            const res = await request(server).delete("/api/posts/1/comments/e");
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 200 if comment is deleted", async () => {
+            const res = await request(server).delete("/api/posts/1/comments/1");
             expect(res.status).toBe(200);
         });
     });
