@@ -6,10 +6,10 @@ const auth = require("../middleware/auth");
 const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
 
-router.get("/me", auth, (req, res) => {
-    const user = users.filter((user) => user.id === req.user._id);
-    res.json(user);
-});
+// router.get("/me", auth, (req, res) => {
+//     const user = users.filter((user) => user.id === req.user._id);
+//     res.json(user);
+// });
 
 router.get("/", auth, (req, res) => {
     res.json(users);
@@ -25,6 +25,12 @@ router.get("/:id", auth, (req, res) => {
             msg: `No user with the id of ${req.params.id}`,
         });
     }
+});
+
+router.post("/", auth, (req, res) => {
+    res.status(423).json({
+        msg: "POST requests are locked",
+    });
 });
 
 router.put("/:id", auth, (req, res) => {

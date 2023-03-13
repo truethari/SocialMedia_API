@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node index",
         "dev": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& node index",
-        "test": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& jest --watchAll --coverage"
+        "test": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& jest --runInBand --watchAll --coverage"
     },
     "repository": {
         "type": "git",

@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 function validateUser(user) {
     const schema = Joi.object({
-        fName: Joi.string().required(),
+        fName: Joi.string().min(3).required(),
         lName: Joi.string().required(),
         email: Joi.string().required().email(),
         birthday: Joi.date().required(),
