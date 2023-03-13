@@ -16,11 +16,16 @@ const middleware = {
     checkCommentExists,
 };
 
-router.get("/:id", auth, checkPostExists, (req, res) => {
-    checkPostExists(req, res);
-
-    res.json(posts.filter((post) => post.id === parseInt(req.params.id)));
-});
+router.get(
+    "/:id",
+    [middleware.auth, middleware.checkPostExists],
+    (req, res) => {
+        const post = posts.filter(
+            (post) => post.id === parseInt(req.params.id)
+        );
+        res.json(post[0]);
+    }
+);
 
 router.post("/", auth, (req, res) => {
     const { error } = validatePost(req.body);
@@ -40,34 +45,43 @@ router.post("/", auth, (req, res) => {
     res.json(posts);
 });
 
-router.put("/:id", auth, (req, res) => {
-    const { error } = validatePost(req.body);
+router.put(
+    "/:id",
+    [middleware.auth, middleware.checkPostExists],
+    (req, res) => {
+        const { error } = validatePost(req.body);
 
-    if (error) {
-        return res.status(400).send(error.details[0].message);
-    }
-
-    const updatedPost = req.body;
-    posts.forEach((post) => {
-        if (post.id === parseInt(req.params.id)) {
-            post.user = updatedPost.user ? updatedPost.user : post.user;
-            post.body = updatedPost.body ? updatedPost.body : post.body;
-            post.tags = updatedPost.tags ? updatedPost.tags : post.tags;
-
-            res.json({
-                msg: "Post updated",
-                post,
-            });
+        if (error) {
+            return res.status(400).send(error.details[0].message);
         }
-    });
-});
 
-router.delete("/:id", auth, checkPostExists, (req, res) => {
-    res.json({
-        msg: "Post deleted",
-        posts: posts.filter((post) => post.id !== parseInt(req.params.id)),
-    });
-});
+        const updatedPost = req.body;
+        posts.forEach((post) => {
+            if (post.id === parseInt(req.params.id)) {
+                post.user = updatedPost.user ? updatedPost.user : post.user;
+                post.body = updatedPost.body ? updatedPost.body : post.body;
+                post.tags = updatedPost.tags ? updatedPost.tags : post.tags;
+
+                console.log(post);
+                res.json({
+                    msg: "Post updated",
+                    post,
+                });
+            }
+        });
+    }
+);
+
+router.delete(
+    "/:id",
+    [middleware.auth, middleware.checkPostExists],
+    (req, res) => {
+        res.json({
+            msg: "Post deleted",
+            posts: posts.filter((post) => post.id !== parseInt(req.params.id)),
+        });
+    }
+);
 
 router.get(
     "/:id/comments",
@@ -166,7 +180,6 @@ router.delete(
 
 function validatePost(post) {
     const schema = Joi.object({
-        id: Joi.number().min(3).required(),
         user: Joi.number().min(3).required(),
         body: Joi.string().min(3).required(),
         tags: Joi.array().items(Joi.string()),
