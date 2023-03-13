@@ -124,16 +124,6 @@ describe("/api/posts", () => {
             expect(res.status).toBe(404);
         });
 
-        it("should return 400 if it the body.body is null", async () => {
-            const res = await request(server)
-                .put("/api/posts/1")
-                .send({
-                    user: 10,
-                    tags: ["U1", "U3"],
-                });
-            expect(res.status).toBe(400);
-        });
-
         it("should return 400 if it the body.tags is invalid", async () => {
             const res = await request(server).put("/api/posts/1").send({
                 user: 10,
@@ -141,6 +131,16 @@ describe("/api/posts", () => {
                 tags: "U1",
             });
             expect(res.status).toBe(400);
+        });
+
+        it("should return 200 if it the body.body is null", async () => {
+            const res = await request(server)
+                .put("/api/posts/1")
+                .send({
+                    user: 10,
+                    tags: ["U1", "U3"],
+                });
+            expect(res.status).toBe(200);
         });
 
         it("should return 200 if tags is null", async () => {
@@ -294,6 +294,11 @@ describe("/api/posts", () => {
 
         it("should return 200 if comment is deleted", async () => {
             const res = await request(server).delete("/api/posts/1/comments/1");
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if comment is deleted", async () => {
+            const res = await request(server).delete("/api/posts/1/comments/2");
             expect(res.status).toBe(200);
         });
     });

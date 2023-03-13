@@ -49,7 +49,13 @@ router.put(
     "/:id",
     [middleware.auth, middleware.checkPostExists],
     (req, res) => {
-        const { error } = validatePost(req.body);
+        const schema = Joi.object({
+            user: Joi.number().required(),
+            body: Joi.string().min(3),
+            tags: Joi.array().items(Joi.string()),
+        });
+
+        const { error } = schema.validate(req.body);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
@@ -58,7 +64,7 @@ router.put(
         const updatedPost = req.body;
         posts.forEach((post) => {
             if (post.id === parseInt(req.params.id)) {
-                post.user = updatedPost.user ? updatedPost.user : post.user;
+                post.user = updatedPost.user;
                 post.body = updatedPost.body ? updatedPost.body : post.body;
                 post.tags = updatedPost.tags ? updatedPost.tags : post.tags;
 
@@ -155,12 +161,8 @@ router.put(
                 comment.post === parseInt(req.params.id) &&
                 comment.id === parseInt(req.params.commentId)
             ) {
-                comment.user = updatedComment.user
-                    ? updatedComment.user
-                    : comment.user;
-                comment.body = updatedComment.body
-                    ? updatedComment.body
-                    : comment.body;
+                comment.user = updatedComment.user;
+                comment.body = updatedComment.body;
 
                 res.json({
                     msg: "Comment updated",
@@ -183,8 +185,8 @@ router.delete(
             msg: "Comment deleted",
             comments: comments.filter(
                 (comment) =>
-                    comment.post !== parseInt(req.params.id) &&
-                    comment.id !== parseInt(req.params.commentId)
+                    comment.id !== parseInt(req.params.commentId) &&
+                    comment.post !== parseInt(req.params.id)
             ),
         });
     }
