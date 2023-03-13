@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const Joi = require("joi");
 
 const auth = require("../middleware/auth");
-
-const { validateUser } = require("../utils/validations");
 const users = require("../assets/data/users.json");
 
 // router.get("/me", auth, (req, res) => {
@@ -34,7 +33,16 @@ router.post("/", auth, (req, res) => {
 });
 
 router.put("/:id", auth, (req, res) => {
-    const { error } = validateUser(req.body);
+    const schema = Joi.object({
+        fName: Joi.string().min(3),
+        lName: Joi.string(),
+        email: Joi.string().email(),
+        birthday: Joi.date(),
+        gender: Joi.string(),
+        password: Joi.string(),
+    });
+
+    const { error } = schema.validate(req.body);
 
     if (error) {
         return res.status(400).json({

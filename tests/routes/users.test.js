@@ -53,16 +53,6 @@ describe("/api/users", () => {
             expect(res.status).toBe(400);
         });
 
-        it("should return 400 if missed a value", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                fName: "Test",
-                lName: "User",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-            });
-            expect(res.status).toBe(400);
-        });
-
         it("should return 400 if invalid fName is passed", async () => {
             const res = await request(server).put("/api/users/1").send({
                 fName: "T",
@@ -107,6 +97,72 @@ describe("/api/users", () => {
                 birthday: "2000-01-01",
                 gender: "M",
                 password: "123456",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if missed fName", async () => {
+            const res = await request(server).put("/api/users/1").send({
+                lName: "User",
+                email: "e@email.com",
+                birthday: "2000-01-01",
+                gender: "M",
+                password: "123456",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if missed lName", async () => {
+            const res = await request(server).put("/api/users/1").send({
+                fName: "Test",
+                email: "e@email.com",
+                birthday: "2000-01-01",
+                gender: "M",
+                password: "123456",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if missed email", async () => {
+            const res = await request(server).put("/api/users/1").send({
+                fName: "Test",
+                lName: "User",
+                birthday: "2000-01-01",
+                gender: "M",
+                password: "123456",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if missed birthday", async () => {
+            const res = await request(server).put("/api/users/1").send({
+                fName: "Test",
+                lName: "User",
+                email: "e@email.com",
+                gender: "M",
+                password: "123456",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if missed gender", async () => {
+            const res = await request(server).put("/api/users/1").send({
+                fName: "Test",
+                lName: "User",
+                email: "e@email.com",
+                birthday: "2000-01-01",
+                password: "123456",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if missed password", async () => {
+            const res = await request(server).put("/api/users/1").send({
+                fName: "Test",
+                lName: "User",
+                email: "e@email.com",
+                birthday: "2000-01-01",
+                gender: "M",
             });
             expect(res.status).toBe(200);
         });
