@@ -1,10 +1,11 @@
 const express = require("express");
-const Joi = require("joi");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
 const posts = require("../assets/data/posts.json");
 const comments = require("../assets/data/comments.json");
+
+const { validatePost, validateComment } = require("../utils/validations");
 
 router.get("/", (req, res) => {
     res.json(posts);
@@ -49,13 +50,7 @@ router.put(
     "/:id",
     [middleware.auth, middleware.checkPostExists],
     (req, res) => {
-        const schema = Joi.object({
-            user: Joi.number().required(),
-            body: Joi.string().min(3),
-            tags: Joi.array().items(Joi.string()),
-        });
-
-        const { error } = schema.validate(req.body);
+        const { error } = validatePost(req.body, ["body", "tags"]);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
@@ -191,25 +186,6 @@ router.delete(
         });
     }
 );
-
-function validatePost(post) {
-    const schema = Joi.object({
-        user: Joi.number().min(3).required(),
-        body: Joi.string().min(3).required(),
-        tags: Joi.array().items(Joi.string()),
-    });
-
-    return schema.validate(post);
-}
-
-function validateComment(comment) {
-    const schema = Joi.object({
-        user: Joi.number().required(),
-        body: Joi.string().min(3).required(),
-    });
-
-    return schema.validate(comment);
-}
 
 function checkPostExists(req, res, next) {
     const post = posts.find((post) => post.id === parseInt(req.params.id));
