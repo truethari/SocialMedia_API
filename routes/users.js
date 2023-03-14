@@ -147,13 +147,23 @@ router.put("/:id", auth, async (req, res) => {
 });
 
 router.delete("/:id", auth, async (req, res) => {
-    const cmd = await sqlCommand("DELETE FROM users WHERE id=?;", [
+    const cmd = await sqlCommand("SELECT * FROM users WHERE id=?;", [
         req.params.id,
     ]);
 
-    if (!cmd.affectedRows) {
+    if (!cmd.length) {
         return res.status(404).json({
             msg: `No user with the id of ${req.params.id}`,
+        });
+    }
+
+    const cmd2 = await sqlCommand("DELETE FROM users WHERE id=?;", [
+        req.params.id,
+    ]);
+
+    if (!cmd2.affectedRows) {
+        return res.status(500).json({
+            msg: "Something went wrong",
         });
     }
 

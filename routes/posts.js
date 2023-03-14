@@ -7,6 +7,7 @@ const sqlCommand = require("../utils/db");
 
 const middleware = {
     auth,
+    checkUserExists,
     checkPostExists,
     checkCommentExists,
 };
@@ -66,59 +67,63 @@ router.put(
     "/:id",
     [middleware.auth, middleware.checkPostExists],
     async (req, res) => {
-        const { error } = validatePost(req.body, ["user", "body", "title"]);
-
-        if (error) {
-            return res.status(400).send(error.details[0].message);
-        }
-
         if (!req.body.title && !req.body.body) {
             return res.status(400).json({
                 msg: "Please include a title or body",
             });
         }
 
-        let cmd;
+        if (req.body.title) {
+            const { error } = validatePost(req.body, ["user", "body"]);
 
-        if (!req.body.title) {
-            cmd = await sqlCommand("UPDATE posts SET body = ? WHERE id = ?;", [
-                req.body.body,
-                req.params.id,
-            ]);
-        } else if (!req.body.body) {
-            cmd = await sqlCommand("UPDATE posts SET title = ? WHERE id = ?;", [
+            if (error) {
+                return res.status(400).send(error.details[0].message);
+            }
+
+            await sqlCommand("UPDATE posts SET title = ? WHERE id = ?;", [
                 req.body.title,
                 req.params.id,
             ]);
         }
 
-        if (!cmd.affectedRows) {
-            return res.status(404).json({
-                msg: `No post with the id of ${req.params.id}`,
-            });
+        if (req.body.body) {
+            const { error } = validatePost(req.body, ["user", "title"]);
+
+            if (error) {
+                return res.status(400).send(error.details[0].message);
+            }
+
+            await sqlCommand("UPDATE posts SET body = ? WHERE id = ?;", [
+                req.body.body,
+                req.params.id,
+            ]);
         }
 
         const post = await sqlCommand("SELECT * FROM posts WHERE id=?;", [
             req.params.id,
         ]);
 
-        res.json(post);
+        res.json(post[0]);
     }
 );
 
-router.delete("/:id", middleware.auth, async (req, res) => {
-    const cmd = await sqlCommand("DELETE FROM posts WHERE id=?;", [
-        req.params.id,
-    ]);
+router.delete(
+    "/:id",
+    [middleware.auth, middleware.checkPostExists],
+    async (req, res) => {
+        const cmd = await sqlCommand("DELETE FROM posts WHERE id=?;", [
+            req.params.id,
+        ]);
 
-    if (!cmd.affectedRows) {
-        return res.status(404).json({
-            msg: `No post with the id of ${req.params.id}`,
-        });
-    } else {
-        return res.json({ msg: "Post deleted" });
+        if (!cmd.affectedRows) {
+            return res.status(500).json({
+                msg: "Something went wrong",
+            });
+        } else {
+            return res.json({ msg: "Post deleted" });
+        }
     }
-});
+);
 
 router.get(
     "/:id/comments",
@@ -160,7 +165,7 @@ router.get(
 
 router.post(
     "/:id/comments",
-    [middleware.auth, middleware.checkPostExists],
+    [middleware.auth, middleware.checkUserExists, middleware.checkPostExists],
     async (req, res) => {
         const { error } = validateComment(req.body);
 
@@ -172,12 +177,6 @@ router.post(
             "INSERT INTO comments (post, user, body) VALUES (?, ?, ?);",
             [req.params.id, req.body.user, req.body.body]
         );
-
-        if (!cmd.affectedRows) {
-            return res.status(404).json({
-                msg: `something went wrong`,
-            });
-        }
 
         const comment = await sqlCommand("SELECT * FROM comments WHERE id=?;", [
             cmd.insertId,
@@ -206,12 +205,6 @@ router.put(
             [req.body.body, req.params.commentId]
         );
 
-        if (!cmd.affectedRows) {
-            return res.status(404).json({
-                msg: `No comment with the id of ${req.params.commentId}`,
-            });
-        }
-
         const comment = await sqlCommand("SELECT * FROM comments WHERE id=?;", [
             req.params.id,
         ]);
@@ -228,20 +221,29 @@ router.delete(
         middleware.checkCommentExists,
     ],
     async (req, res) => {
-        const cmd = await sqlCommand("DELETE FROM comments WHERE id=?;", [
+        await sqlCommand("DELETE FROM comments WHERE id=?;", [
             req.params.commentId,
         ]);
 
-        if (!cmd.affectedRows) {
-            return res.status(404).json({
-                msg: `No comment with the id of ${req.params.commentId}`,
-            });
-        }
         res.json({
             msg: "Comment deleted",
         });
     }
 );
+
+async function checkUserExists(req, res, next) {
+    const user = await sqlCommand("SELECT * FROM users WHERE id=?;", [
+        req.body.user,
+    ]);
+
+    if (!user.length) {
+        return res.status(404).json({
+            msg: `No user with the id of ${req.body.user}`,
+        });
+    } else {
+        next();
+    }
+}
 
 async function checkPostExists(req, res, next) {
     const post = await sqlCommand("SELECT * FROM posts WHERE id=?;", [

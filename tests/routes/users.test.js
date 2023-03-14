@@ -238,5 +238,15 @@ describe("/api/users", () => {
             const res = await request(server).delete("/api/users/1000");
             expect(res.status).toBe(200);
         });
+
+        it("should return 500 if user has posts", async () => {
+            await sqlCommand(
+                "INSERT INTO posts (user, title, body) VALUES (? , ? , ?);",
+                [1000, "test", "test"]
+            );
+
+            const res = await request(server).delete("/api/users/1000");
+            expect(res.status).toBe(500);
+        });
     });
 });
