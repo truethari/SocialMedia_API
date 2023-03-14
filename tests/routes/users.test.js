@@ -4,7 +4,7 @@ let server;
 
 describe("/api/users", () => {
     beforeEach(() => {
-        server = require("../../index");
+        server = require("../../index").server;
     });
 
     afterEach(() => {

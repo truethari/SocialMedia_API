@@ -4,7 +4,7 @@ describe("/api/signin", () => {
     let server;
 
     beforeEach(() => {
-        server = require("../../index");
+        server = require("../../index").server;
     });
 
     afterEach(() => {
