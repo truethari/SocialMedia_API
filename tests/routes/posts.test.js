@@ -1,6 +1,7 @@
 const request = require("supertest");
 
 let server;
+let sqlCommand;
 
 describe("/api/posts", () => {
     beforeEach(() => {
@@ -12,107 +13,137 @@ describe("/api/posts", () => {
     });
 
     describe("POST /", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "e@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+        });
+
         it("should return 400 if post is invalid", async () => {
             const res = await request(server).post("/api/posts");
             expect(res.status).toBe(400);
         });
 
-        it("should return 400 if tags is not an array", async () => {
-            const res = await request(server)
-                .post("/api/posts")
-                .send({ user: 10, body: "Test Post", tags: 1 });
-            expect(res.status).toBe(400);
-        });
-
-        it("should save the post if tags is null", async () => {
-            const res = await request(server)
-                .post("/api/posts")
-                .send({ user: 1, body: "Test Post" });
-            expect(res.status).toBe(200);
-        });
-
         it("should save the post if it is valid", async () => {
             const res = await request(server)
                 .post("/api/posts")
-                .send({ user: 1, body: "Test Post", tags: [2] });
+                .send({ user: 1000, title: "test", body: "Test Post" });
             expect(res.status).toBe(200);
         });
 
         it("should return the post if it is valid", async () => {
             const res = await request(server)
                 .post("/api/posts")
-                .send({ user: 1, body: "Test Post 3", tags: [2] });
-            expect(res.body).toHaveProperty("user", 1);
+                .send({ user: 1000, title: "test", body: "Test Post 3" });
+            expect(res.body).toHaveProperty("user", 1000);
         });
 
-        it("should return the post if it is valid", async () => {
+        it("should return 404 if user does not exist", async () => {
             const res = await request(server)
                 .post("/api/posts")
-                .send({ user: 1, body: "Test Post", tags: [2] });
-            expect(res.body).toHaveProperty("body", "Test Post");
-        });
-
-        it("should return the post if it is valid", async () => {
-            const res = await request(server)
-                .post("/api/posts")
-                .send({ user: 1, body: "Test Post", tags: [2] });
-            expect(res.body).toHaveProperty("tags", [2]);
+                .send({ user: 1001, title: "test", body: "Test Post" });
+            expect(res.status).toBe(404);
         });
     });
 
     describe("PUT /:id", () => {
-        it("should return 404 if request is invalid", async () => {
-            const res = await request(server).put("/api/posts/1");
-            expect(res.status).toBe(400);
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
         });
 
-        it("should return 404 if id is invalid", async () => {
-            const res = await request(server)
-                .put("/api/posts/10")
-                .send({ user: 1, body: "Test Post", tags: [2] });
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+        });
+
+        it("should return 404 if post does not exist", async () => {
+            const res = await request(server).put("/api/posts/1");
             expect(res.status).toBe(404);
         });
 
-        it("should return 400 if it the body.tags is invalid", async () => {
-            const res = await request(server).put("/api/posts/1").send({
-                user: 1,
-                body: "Test Post",
-                tags: 1,
-            });
+        it("should return 400 if request is invalid", async () => {
+            const res = await request(server).put("/api/posts/1000");
             expect(res.status).toBe(400);
         });
 
-        it("should return 200 if it the body.body is null", async () => {
+        it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .put("/api/posts/1")
-                .send({
-                    user: 1,
-                    tags: [2],
-                });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if tags is null", async () => {
-            const res = await request(server).put("/api/posts/1").send({
-                user: 1,
-                body: "Test Post",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if post is updated", async () => {
-            const res = await await request(server)
-                .put("/api/posts/1")
-                .send({
-                    user: 1,
-                    body: "Test Post",
-                    tags: [2],
-                });
+                .put("/api/posts/1000")
+                .send({ title: "test" });
             expect(res.status).toBe(200);
         });
     });
 
     describe("GET /", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+        });
+
         it("should return all posts", async () => {
             const res = await request(server).get("/api/posts");
             expect(res.status).toBe(200);
@@ -120,9 +151,32 @@ describe("/api/posts", () => {
     });
 
     describe("GET /:id", () => {
-        it("should return a post if valid id is passed", async () => {
-            const res = await request(server).get("/api/posts/1");
-            expect(res.status).toBe(200);
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
         });
 
         it("should return 404 if invalid id is passed", async () => {
@@ -130,173 +184,278 @@ describe("/api/posts", () => {
             expect(res.status).toBe(404);
         });
 
-        it("should return 404 if no post with the given id exists", async () => {
-            const res = await request(server).get("/api/posts/999");
+        it("should return 404 if post with the given id was not found", async () => {
+            const res = await request(server).get("/api/posts/2000");
             expect(res.status).toBe(404);
         });
 
         it("should return a post if valid id is passed", async () => {
-            const res = await request(server).get("/api/posts/1");
-            expect(res.body).toHaveProperty("id", 1);
-        });
-
-        it("should return a post if valid id is passed", async () => {
-            const res = await request(server).get("/api/posts/2");
-            expect(res.body).toHaveProperty("user", 2);
-        });
-
-        it("should return a post if valid id is passed", async () => {
-            const res = await request(server).get("/api/posts/1");
-            expect(res.body).toHaveProperty("body", "Test Post");
-        });
-
-        it("should return a post if valid id is passed", async () => {
-            const res = await request(server).get("/api/posts/1");
-            expect(res.body).toHaveProperty("tags", [2]);
+            const res = await request(server).get("/api/posts/1000");
+            expect(res.status).toBe(200);
         });
     });
 
     describe("DELETE /:id", () => {
-        it("should return 404 if no post with the given id exists", async () => {
-            const res = await request(server).delete("/api/posts/999");
-            expect(res.status).toBe(404);
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
         });
 
-        it("should return 404 if id is invalid", async () => {
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+        });
+
+        it("should return 404 if invalid id is passed", async () => {
             const res = await request(server).delete("/api/posts/e");
             expect(res.status).toBe(404);
         });
 
-        it("should return 200 if post is deleted", async () => {
-            const res = await request(server).delete("/api/posts/1");
+        it("should return 404 if post with the given id was not found", async () => {
+            const res = await request(server).delete("/api/posts/2000");
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 200 if post with the given id was deleted", async () => {
+            const res = await request(server).delete("/api/posts/1000");
             expect(res.status).toBe(200);
         });
     });
 
     describe("POST /:id/comments", () => {
-        it("should return 404 if no post with the given id exists", async () => {
-            const res = await request(server)
-                .post("/api/posts/10/comments")
-                .send({ user: 1, body: "Test Comment" });
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+
+            await sqlCommand(
+                "INSERT INTO comments (id, user, post, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, 1000, "test"]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+            await sqlCommand("DELETE FROM comments;");
+        });
+
+        it("should return 404 if post does not exist", async () => {
+            const res = await request(server).post("/api/posts/2000/comments");
             expect(res.status).toBe(404);
         });
 
-        it("should return 400 if body is invalid", async () => {
-            const res = await request(server)
-                .post("/api/posts/1/comments")
-                .send({ user: 1, body: "" });
+        it("should return 400 if requst is invalid", async () => {
+            const res = await request(server).post("/api/posts/1000/comments");
             expect(res.status).toBe(400);
         });
 
-        it("should return 400 if body is invalid", async () => {
+        it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .post("/api/posts/1/comments")
-                .send({ user: 1 });
-            expect(res.status).toBe(400);
-        });
-
-        it("should return 200 if comment is valid", async () => {
-            const res = await request(server)
-                .post("/api/posts/1/comments")
-                .send({ user: 1, body: "Test Comment" });
+                .post("/api/posts/1000/comments")
+                .send({ user: 1000, body: "test" });
             expect(res.status).toBe(200);
         });
     });
 
-    describe("PUT /:id/comments/:id", () => {
-        it("should return 404 if no comment with the given id exists", async () => {
-            const res = await request(server)
-                .put("/api/posts/1/comments/10")
-                .send({ body: "Test Comment" });
+    describe("PUT /:id/comments/:commentId", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+
+            await sqlCommand(
+                "INSERT INTO comments (id, user, post, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, 1000, "test"]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+            await sqlCommand("DELETE FROM comments;");
+        });
+
+        it("should return 404 if post does not exist", async () => {
+            const res = await request(server).put(
+                "/api/posts/2000/comments/1000"
+            );
             expect(res.status).toBe(404);
         });
 
-        it("should return 404 if id is invalid", async () => {
-            const res = await request(server)
-                .put("/api/posts/1/comments/e")
-                .send({ body: "Hello Post 3" });
+        it("should return 404 if comment does not exist", async () => {
+            const res = await request(server).put(
+                "/api/posts/1000/comments/2000"
+            );
             expect(res.status).toBe(404);
         });
 
-        it("should return 400 if body is invalid", async () => {
-            const res = await request(server)
-                .put("/api/posts/1/comments/1")
-                .send({ body: "" });
+        it("should return 400 if request is invalid", async () => {
+            const res = await request(server).put(
+                "/api/posts/1000/comments/1000"
+            );
             expect(res.status).toBe(400);
         });
 
-        it("should return 200 if comment is updated", async () => {
+        it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .put("/api/posts/1/comments/1")
-                .send({ user: 1, body: "Test Comment" });
+                .put("/api/posts/1000/comments/1000")
+                .send({ body: "test" });
             expect(res.status).toBe(200);
         });
     });
 
     describe("GET /:id/comments", () => {
-        it("should return 404 if no post with the given id exists", async () => {
-            const res = await request(server).get("/api/posts/999/comments");
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+
+            await sqlCommand(
+                "INSERT INTO comments (id, user, post, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, 1000, "test"]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+            await sqlCommand("DELETE FROM comments;");
+        });
+
+        it("should return 404 if post does not exist", async () => {
+            const res = await request(server).get("/api/posts/2000/comments");
             expect(res.status).toBe(404);
         });
 
-        it("should return 200 if post id is valid", async () => {
-            const res = await request(server).get("/api/posts/1/comments");
+        it("should return 200 if request is valid", async () => {
+            const res = await request(server).get("/api/posts/1000/comments");
             expect(res.status).toBe(200);
-        });
-
-        it("should return all comments for a post", async () => {
-            const res = await request(server).get("/api/posts/1/comments");
-            expect(res.body).toHaveLength(3);
-        });
-
-        it("should return all comments for a post", async () => {
-            const res = await request(server).get("/api/posts/1/comments");
-            expect(res.body[0]).toHaveProperty("id", 1);
-        });
-
-        it("should return all comments for a post", async () => {
-            const res = await request(server).get("/api/posts/1/comments");
-            expect(res.body[1]).toHaveProperty("id", 2);
         });
     });
 
-    describe("GET /:id/comments/:id", () => {
-        it("should return 404 if no comment with the given id exists", async () => {
-            const res = await request(server).get("/api/posts/1/comments/999");
-            expect(res.status).toBe(404);
+    describe("DELETE /:id/comments/:commentId", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "testt@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+
+            await sqlCommand(
+                "INSERT INTO posts (id, user, title, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, "test", "test"]
+            );
+
+            await sqlCommand(
+                "INSERT INTO comments (id, user, post, body) VALUES (?, ?, ?, ?);",
+                [1000, 1000, 1000, "test"]
+            );
         });
 
-        it("should return 404 if id is invalid", async () => {
-            const res = await request(server).get("/api/posts/1/comments/e");
-            expect(res.status).toBe(404);
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM posts;");
+            await sqlCommand("DELETE FROM users;");
+            await sqlCommand("DELETE FROM comments;");
         });
 
-        it("should return 200 if id is valid", async () => {
-            const res = await request(server).get("/api/posts/1/comments/1");
-            expect(res.status).toBe(200);
-        });
-    });
-
-    describe("DELETE /:id/comments/:id", () => {
-        it("should return 404 if id is invalid", async () => {
+        it("should return 404 if post does not exist", async () => {
             const res = await request(server).delete(
-                "/api/posts/1/comments/10"
+                "/api/posts/2000/comments/1000"
             );
             expect(res.status).toBe(404);
         });
 
-        it("should return 404 if id is invalid", async () => {
-            const res = await request(server).delete("/api/posts/1/comments/e");
+        it("should return 404 if comment does not exist", async () => {
+            const res = await request(server).delete(
+                "/api/posts/1000/comments/2000"
+            );
             expect(res.status).toBe(404);
         });
 
-        it("should return 200 if comment is deleted", async () => {
-            const res = await request(server).delete("/api/posts/1/comments/1");
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if comment is deleted", async () => {
-            const res = await request(server).delete("/api/posts/1/comments/2");
+        it("should return 200 if request is valid", async () => {
+            const res = await request(server).delete(
+                "/api/posts/1000/comments/1000"
+            );
             expect(res.status).toBe(200);
         });
     });

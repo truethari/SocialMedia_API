@@ -21,6 +21,12 @@ function validateUser(user, notRequired = []) {
         gender: notRequired.includes("gender")
             ? Joi.string()
             : Joi.string().required(),
+        status: notRequired.includes("status")
+            ? Joi.string()
+            : Joi.string().required(),
+        role: notRequired.includes("role")
+            ? Joi.string()
+            : Joi.string().required(),
         password: notRequired.includes("password")
             ? Joi.string()
             : Joi.string().required(),
@@ -35,13 +41,15 @@ function validateUser(user, notRequired = []) {
  */
 function validatePost(post, notRequired = []) {
     const schema = Joi.object({
-        user: Joi.number().required(),
+        user: notRequired.includes("user")
+            ? Joi.number()
+            : Joi.number().required(),
+        title: notRequired.includes("title")
+            ? Joi.string().min(3)
+            : Joi.string().min(3).required(),
         body: notRequired.includes("body")
             ? Joi.string().min(3)
             : Joi.string().min(3).required(),
-        tags: notRequired.includes("tags")
-            ? Joi.array().items(Joi.number())
-            : Joi.array().items(Joi.number()),
     });
 
     return schema.validate(post);
@@ -53,7 +61,9 @@ function validatePost(post, notRequired = []) {
  */
 function validateComment(comment, notRequired = []) {
     const schema = Joi.object({
-        user: Joi.number().required(),
+        user: notRequired.includes("user")
+            ? Joi.number()
+            : Joi.number().required(),
         body: Joi.string().min(3).required(),
     });
 

@@ -5,8 +5,8 @@
     "main": "index.js",
     "scripts": {
         "start": "node index",
-        "dev": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& node index",
-        "test": "SET NODE_CONFIG_ENV=production&&SET NODE_ENV=production&& jest --runInBand --watchAll --coverage"
+        "dev": "SET NODE_CONFIG_ENV=development&&SET NODE_ENV=development&& node index",
+        "test": "SET NODE_CONFIG_ENV=development&&SET NODE_ENV=development&& jest --runInBand --watchAll --coverage"
     },
     "repository": {
         "type": "git",
