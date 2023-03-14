@@ -2,13 +2,13 @@
     {
         "id": 1,
         "post": 1,
-        "user": "U1",
-        "body": "Hello World!"
+        "user": 1,
+        "body": "Test Comment"
     },
     {
         "id": 2,
         "post": 1,
-        "user": "U2",
-        "body": "Hello World!"
+        "user": 1,
+        "body": "Test Comment"
     }
 ]

@@ -40,8 +40,8 @@ function validatePost(post, notRequired = []) {
             ? Joi.string().min(3)
             : Joi.string().min(3).required(),
         tags: notRequired.includes("tags")
-            ? Joi.array().items(Joi.string())
-            : Joi.array().items(Joi.string()),
+            ? Joi.array().items(Joi.number())
+            : Joi.array().items(Joi.number()),
     });
 
     return schema.validate(post);

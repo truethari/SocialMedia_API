@@ -43,7 +43,7 @@ router.post("/", auth, (req, res) => {
     };
 
     posts.push(newPost);
-    res.json(posts);
+    res.json(newPost);
 });
 
 router.put(

@@ -1,14 +1,14 @@
 [
     {
         "id": 1,
-        "user": "U1",
-        "body": "Hello Post 1",
-        "tags": ["U2", "U3"]
+        "user": 1,
+        "body": "Test Post",
+        "tags": [2]
     },
     {
         "id": 2,
-        "user": "U2",
-        "body": "Hello Post 2",
-        "tags": ["U1", "U3"]
+        "user": 2,
+        "body": "Test Post",
+        "tags": [1]
     }
 ]
