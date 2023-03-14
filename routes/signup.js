@@ -4,12 +4,16 @@ const bcrypt = require("bcrypt");
 const router = express.Router();
 
 const { validateUser } = require("../utils/validations");
-const users = require("../assets/data/users.json");
 
 const sqlCommand = require("../utils/db");
 
 router.post("/", async (req, res) => {
-    const { error } = validateUser(req.body, ["birthday", "gender", "status"]);
+    const { error } = validateUser(req.body, [
+        "birthday",
+        "gender",
+        "status",
+        "role",
+    ]);
 
     if (error) {
         return res.status(400).json({
@@ -17,43 +21,57 @@ router.post("/", async (req, res) => {
         });
     }
 
-    console.log(
-        `INSERT INTO VALUES (fName = ?, lName = ?, email = ?,${
-            req.body.birthday ? "birthday = ?," : ""
-        }${req.body.gender ? "gender = ?," : ""}${
-            req.body.role ? "role = ?," : ""
-        }password = ?);`
-    );
+    const cmd = await sqlCommand("SELECT * FROM users WHERE email=?;", [
+        req.body.email,
+    ]);
 
-    const cmd = await sqlCommand(
-        "INSERT INTO users (fName, lName, email, birthday, gender, status, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+    if (cmd.length) {
+        return res.status(400).json({
+            msg: `User with email ${req.body.email} already exists`,
+        });
+    }
+
+    const cmd2 = await sqlCommand(
+        "INSERT INTO users (fName, lName, email, password) VALUES (? , ? , ? , ?);",
         [
             req.body.fName,
             req.body.lName,
             req.body.email,
-            req.body.birthday,
-            req.body.gender,
-            req.body.status,
-            req.body.role,
             await bcrypt.hash(req.body.password, 10),
         ]
     );
 
-    res.json(cmd);
-});
-
-router.delete("/:id", async (req, res) => {
-    const cmd = await sqlCommand("DELETE FROM users WHERE id=?;", [
-        req.params.id,
-    ]);
-
-    if (!cmd.affectedRows) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    } else {
-        res.json(cmd);
+    if (req.body.birthday) {
+        await sqlCommand("UPDATE users SET birthday=? WHERE id=?;", [
+            req.body.birthday,
+            cmd2.insertId,
+        ]);
     }
+
+    if (req.body.gender) {
+        await sqlCommand("UPDATE users SET gender=? WHERE id=?;", [
+            req.body.gender,
+            cmd2.insertId,
+        ]);
+    }
+
+    if (req.body.status) {
+        await sqlCommand("UPDATE users SET status=? WHERE id=?;", [
+            req.body.status,
+            cmd2.insertId,
+        ]);
+    }
+
+    if (req.body.role) {
+        await sqlCommand("UPDATE users SET role=? WHERE id=?;", [
+            req.body.role,
+            cmd2.insertId,
+        ]);
+    }
+
+    res.json({
+        msg: "User created",
+    });
 });
 
 module.exports = router;
