@@ -1,6 +1,7 @@
 const request = require("supertest");
 
 let server;
+let sqlCommand;
 
 describe("/api/users", () => {
     beforeEach(() => {
@@ -11,30 +12,6 @@ describe("/api/users", () => {
         server.close();
     });
 
-    describe("GET /", () => {
-        it("should return all users", async () => {
-            const res = await request(server).get("/api/users");
-            expect(res.status).toBe(200);
-        });
-    });
-
-    describe("GET /:id", () => {
-        it("should return 404 if invalid id is passed", async () => {
-            const res = await request(server).get("/api/users/e");
-            expect(res.status).toBe(400);
-        });
-
-        it("should return 404 if no user with the given id exists", async () => {
-            const res = await request(server).get("/api/users/999");
-            expect(res.status).toBe(400);
-        });
-
-        it("should return a user if valid id is passed", async () => {
-            const res = await request(server).get("/api/users/1");
-            expect(res.status).toBe(200);
-        });
-    });
-
     describe("POST /", () => {
         it("should return 423 (locked) when try to POST requests", async () => {
             const res = await request(server).post("/api/users");
@@ -43,144 +20,222 @@ describe("/api/users", () => {
     });
 
     describe("PUT /:id", () => {
-        it("should return 400 if no user with the given id exists", async () => {
-            const res = await request(server).put("/api/users/999");
-            expect(res.status).toBe(400);
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "e@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
         });
 
-        it("should return 400 if invalid id is passed", async () => {
-            const res = await request(server).put("/api/users/e");
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM users;");
+        });
+
+        it("should return 400 if no body is passed", async () => {
+            const res = await request(server).put("/api/users/1000");
             expect(res.status).toBe(400);
         });
 
         it("should return 400 if invalid fName is passed", async () => {
-            const res = await request(server).put("/api/users/1").send({
+            const res = await request(server).put("/api/users/1000").send({
                 fName: "T",
-                lName: "User",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-                gender: "M",
-                password: "123456",
             });
             expect(res.status).toBe(400);
         });
 
-        it("should return 400 if invalid email is passed", async () => {
-            const res = await request(server).put("/api/users/1").send({
+        it("should return 404 if no user with the given id exists", async () => {
+            const res = await request(server).put("/api/users/2000").send({
                 fName: "Test",
                 lName: "User",
-                email: "email.com",
+                email: "f@email.com",
                 birthday: "2000-01-01",
                 gender: "M",
-                password: "123456",
+                role: "user",
+                password: "12345",
             });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(404);
         });
 
-        it("should return 400 if no user with the given id exists", async () => {
-            const res = await request(server).put("/api/users/999").send({
+        it("should return 200 if only fName is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
                 fName: "Test",
-                lName: "User",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-                gender: "M",
-                password: "123456",
             });
-            expect(res.status).toBe(400);
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only lName is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                lName: "User",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only email is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                email: "g@email.com",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only birthday is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                birthday: "2000-01-01",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only gender is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                gender: "M",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only status is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                status: "active",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only role is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                role: "user",
+            });
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 200 if only password is passed", async () => {
+            const res = await request(server).put("/api/users/1000").send({
+                password: "12345",
+            });
+            expect(res.status).toBe(200);
         });
 
         it("should return 200 if valid id is passed", async () => {
-            const res = await await request(server).put("/api/users/1").send({
+            const res = await request(server).put("/api/users/1000").send({
                 fName: "Test",
                 lName: "User",
-                email: "e@email.com",
+                email: "f@email.com",
                 birthday: "2000-01-01",
                 gender: "M",
-                password: "123456",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if missed fName", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                lName: "User",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-                gender: "M",
-                password: "123456",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if missed lName", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                fName: "Test",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-                gender: "M",
-                password: "123456",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if missed email", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                fName: "Test",
-                lName: "User",
-                birthday: "2000-01-01",
-                gender: "M",
-                password: "123456",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if missed birthday", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                fName: "Test",
-                lName: "User",
-                email: "e@email.com",
-                gender: "M",
-                password: "123456",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if missed gender", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                fName: "Test",
-                lName: "User",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-                password: "123456",
-            });
-            expect(res.status).toBe(200);
-        });
-
-        it("should return 200 if missed password", async () => {
-            const res = await request(server).put("/api/users/1").send({
-                fName: "Test",
-                lName: "User",
-                email: "e@email.com",
-                birthday: "2000-01-01",
-                gender: "M",
+                role: "user",
+                password: "12345",
             });
             expect(res.status).toBe(200);
         });
     });
 
-    describe("DELETE /:id", () => {
-        it("should return 400 if invalid id is passed", async () => {
-            const res = await request(server).delete("/api/users/e");
-            expect(res.status).toBe(400);
+    describe("GET /", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "e@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
         });
 
-        it("should return 400 if no user with the given id exists", async () => {
-            const res = await request(server).delete("/api/users/999");
-            expect(res.status).toBe(400);
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM users;");
+        });
+
+        it("should return all users", async () => {
+            const res = await request(server).get("/api/users");
+            expect(res.status).toBe(200);
+        });
+
+        it("should return 404 if no users are found", async () => {
+            await sqlCommand("DELETE FROM users;");
+            const res = await request(server).get("/api/users");
+            expect(res.status).toBe(404);
+        });
+    });
+
+    describe("GET /:id", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "e@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM users;");
+        });
+
+        it("should return 404 if no user with the given id exists", async () => {
+            const res = await request(server).get("/api/users/2000");
+            expect(res.status).toBe(404);
         });
 
         it("should return 200 if valid id is passed", async () => {
-            const res = await request(server).delete("/api/users/1");
+            const res = await request(server).get("/api/users/1000");
+            expect(res.status).toBe(200);
+        });
+    });
+
+    describe("DELETE /:id", () => {
+        beforeEach(async () => {
+            sqlCommand = require("../../utils/db");
+
+            await sqlCommand(
+                "INSERT INTO users (id, fName, lName, email, birthday, gender, role, password) VALUES (? , ? , ? , ? , ? , ? , ? , ?);",
+                [
+                    1000,
+                    "test",
+                    "name",
+                    "e@email.com",
+                    "2000-01-01",
+                    "Male",
+                    "user",
+                    "12345",
+                ]
+            );
+        });
+
+        afterEach(async () => {
+            await sqlCommand("DELETE FROM users;");
+        });
+
+        it("should return 404 if no user with the given id exists", async () => {
+            const res = await request(server).delete("/api/users/2000");
+            expect(res.status).toBe(404);
+        });
+
+        it("should return 200 if valid id is passed", async () => {
+            const res = await request(server).delete("/api/users/1000");
             expect(res.status).toBe(200);
         });
     });
