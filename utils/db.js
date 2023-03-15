@@ -1,27 +1,47 @@
 const mysql = require("mysql");
 const config = require("config");
 
-const connection = mysql.createConnection({
-    host: config.get("db.host"),
-    user: config.get("db.username"),
-    database: config.get("db.database"),
-});
+let connection;
 
-console.log(config.get("db.database"));
-
-connection.connect((err) => {
-    if (err) throw err;
-    console.log("DB Connected!");
-});
-
-function runner(sql, params) {
-    const command = mysql.format(sql, params);
+async function createConnection() {
     return new Promise((resolve, reject) => {
-        connection.query(command, function (err, results) {
+        connection = mysql.createConnection({
+            host: config.get("db.host"),
+            user: config.get("db.username"),
+            database: config.get("db.database"),
+        });
+
+        connection.connect((err) => {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+    });
+}
+
+async function closeConnection() {
+    return new Promise((resolve, reject) => {
+        connection.end((err) => {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+    });
+}
+
+async function runner(sql, params) {
+    const command = mysql.format(sql, params);
+
+    await createConnection();
+    return new Promise((resolve, reject) => {
+        connection.query(command, async function (err, results) {
             if (err) {
                 reject(err.message);
             }
             resolve(results);
+            await closeConnection();
         });
     });
 }
@@ -32,7 +52,7 @@ async function sqlCommand(sql, params = []) {
             return JSON.parse(JSON.stringify(result));
         })
         .catch((err) => {
-            return err;
+            throw new Error(err);
         });
     return result;
 }
