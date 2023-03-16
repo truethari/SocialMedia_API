@@ -2,10 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 const auth = require("../middleware/auth");
-// const users = require("../assets/data/users.json");
-const { validateUser } = require("../utils/validations");
 
 const sqlCommand = require("../utils/db");
+
+const { User, validate } = require("../models/users");
+
+const { getNewUserId } = require("../models/data");
 
 // router.get("/me", auth, (req, res) => {
 //     const user = users.filter((user) => user.id === req.user._id);
@@ -38,10 +40,25 @@ router.get("/:id", auth, async (req, res) => {
     res.json(user);
 });
 
-router.post("/", auth, (req, res) => {
-    res.status(423).json({
-        msg: "POST requests are locked",
+router.post("/", auth, async (req, res) => {
+    const { error } = validate(req.body);
+
+    if (error) {
+        return res.status(400).json({
+            msg: error.details[0].message,
+        });
+    }
+
+    let user = new User({
+        userId: await getNewUserId(),
+        fName: req.body.fName,
+        lName: req.body.lName,
+        email: req.body.email,
+        password: req.body.password,
     });
+
+    user = await user.save();
+    res.send(user);
 });
 
 router.put("/:id", auth, async (req, res) => {
