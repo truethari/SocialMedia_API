@@ -13,12 +13,18 @@ const User = mongoose.model(
     })
 );
 
-function validateUser(user) {
+function validateUser(user, notRequried = []) {
     const schema = Joi.object({
-        fName: Joi.string().min(3).required(),
+        fName: notRequried.includes("fName")
+            ? Joi.string().min(3)
+            : Joi.string().min(3).required(),
         lName: Joi.string(),
-        email: Joi.string().required().email(),
-        password: Joi.string().required(),
+        email: notRequried.includes("email")
+            ? Joi.string().email()
+            : Joi.string().required().email(),
+        password: notRequried.includes("password")
+            ? Joi.string()
+            : Joi.string().required(),
     });
 
     return schema.validate(user);
