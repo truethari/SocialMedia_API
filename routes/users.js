@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { User, validate } = require("../models/users");
+const { User, validate } = require("../models/user");
 const {
     getNewUserId,
     incrementUserCreated,

@@ -9,7 +9,7 @@ const {
     incrementPostCreated,
     incrementPostModified,
 } = require("../models/data");
-const { User } = require("../models/users");
+const { User } = require("../models/user");
 const sqlCommand = require("../utils/db");
 
 const middleware = {
