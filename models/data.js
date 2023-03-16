@@ -28,6 +28,17 @@ async function getNewUserId() {
     return result.created + 1;
 }
 
+async function getNewPostId() {
+    const result = await Stats.findOne({ about: "posts" });
+
+    if (!result) {
+        await createFirst();
+        return await getNewPostId();
+    }
+
+    return result.created + 1;
+}
+
 async function incrementUserCreated() {
     const result = await Stats.findOneAndUpdate(
         {
@@ -155,6 +166,7 @@ async function incrementCommentDeleted() {
 }
 
 module.exports.getNewUserId = getNewUserId;
+module.exports.getNewPostId = getNewPostId;
 module.exports.incrementUserCreated = incrementUserCreated;
 module.exports.incrementUserModified = incrementUserModified;
 module.exports.incrementUserDeleted = incrementUserDeleted;

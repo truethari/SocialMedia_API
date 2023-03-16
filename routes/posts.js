@@ -2,7 +2,14 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
-const { validatePost, validateComment } = require("../utils/validations");
+const { validateComment } = require("../utils/validations");
+const { Post, validate } = require("../models/post");
+const {
+    getNewPostId,
+    incrementPostCreated,
+    incrementPostModified,
+} = require("../models/data");
+const { User } = require("../models/users");
 const sqlCommand = require("../utils/db");
 
 const middleware = {
@@ -13,55 +20,53 @@ const middleware = {
 };
 
 router.get("/", async (req, res) => {
-    const posts = await sqlCommand("SELECT * FROM posts;");
+    const posts = await Post.findOne().select("-__v");
 
-    if (!posts.length) {
+    if (!posts) {
         return res.status(404).json({
             msg: "No posts found",
         });
-    } else {
-        res.json(posts);
     }
+
+    res.json(posts);
 });
 
 router.get("/:id", middleware.auth, async (req, res) => {
-    const posts = await sqlCommand("SELECT * FROM posts WHERE id=?;", [
-        req.params.id,
-    ]);
+    const post = await Post.findOne({ postId: req.params.id }).select("-__v");
 
-    if (!posts.length) {
+    if (!post) {
         return res.status(404).json({
             msg: `No post with the id of ${req.params.id}`,
         });
-    } else {
-        res.json(posts);
     }
+
+    res.json(post);
 });
 
-router.post("/", auth, async (req, res) => {
-    const { error } = validatePost(req.body);
+router.post(
+    "/",
+    [middleware.auth, middleware.checkUserExists],
+    async (req, res) => {
+        const { error } = validate(req.body);
 
-    if (error) {
-        return res.status(400).send(error.details[0].message);
-    }
+        if (error) {
+            return res.status(400).send(error.details[0].message);
+        }
 
-    const cmd = await sqlCommand(
-        "INSERT INTO posts (user, title, body) VALUES (?, ?, ?);",
-        [req.body.user, req.body.title, req.body.body]
-    );
-
-    if (!cmd.affectedRows) {
-        return res.status(404).json({
-            msg: `something went wrong`,
+        let post = new Post({
+            postId: await getNewPostId(),
+            userId: req.body.userId,
+            title: req.body.title,
+            body: req.body.body,
         });
+
+        post = await post.save();
+
+        await incrementPostCreated();
+
+        res.json(post);
     }
-
-    const post = await sqlCommand("SELECT * FROM posts WHERE id=?;", [
-        cmd.insertId,
-    ]);
-
-    res.json(post[0]);
-});
+);
 
 router.put(
     "/:id",
@@ -74,36 +79,48 @@ router.put(
         }
 
         if (req.body.title) {
-            const { error } = validatePost(req.body, ["user", "body"]);
+            const { error } = validate(req.body, ["userId", "body"]);
 
             if (error) {
                 return res.status(400).send(error.details[0].message);
             }
 
-            await sqlCommand("UPDATE posts SET title = ? WHERE id = ?;", [
-                req.body.title,
-                req.params.id,
-            ]);
+            const result = await Post.updateOne(
+                { postId: req.params.id },
+                { title: req.body.title }
+            );
+
+            if (!result) {
+                return res.status(500).json({
+                    msg: "Something went wrong",
+                });
+            }
         }
 
         if (req.body.body) {
-            const { error } = validatePost(req.body, ["user", "title"]);
+            const { error } = validate(req.body, ["userId", "title"]);
 
             if (error) {
                 return res.status(400).send(error.details[0].message);
             }
 
-            await sqlCommand("UPDATE posts SET body = ? WHERE id = ?;", [
-                req.body.body,
-                req.params.id,
-            ]);
+            const result = await Post.updateOne(
+                { postId: req.params.id },
+                { body: req.body.body }
+            );
+
+            if (!result) {
+                return res.status(500).json({
+                    msg: "Something went wrong",
+                });
+            }
         }
 
-        const post = await sqlCommand("SELECT * FROM posts WHERE id=?;", [
-            req.params.id,
-        ]);
+        await incrementPostModified();
 
-        res.json(post[0]);
+        res.json({
+            msg: "Post updated",
+        });
     }
 );
 
@@ -173,15 +190,6 @@ router.post(
             return res.status(400).send(error.details[0].message);
         }
 
-        const cmd = await sqlCommand(
-            "INSERT INTO comments (post, user, body) VALUES (?, ?, ?);",
-            [req.params.id, req.body.user, req.body.body]
-        );
-
-        const comment = await sqlCommand("SELECT * FROM comments WHERE id=?;", [
-            cmd.insertId,
-        ]);
-
         res.json(comment);
     }
 );
@@ -232,13 +240,11 @@ router.delete(
 );
 
 async function checkUserExists(req, res, next) {
-    const user = await sqlCommand("SELECT * FROM users WHERE id=?;", [
-        req.body.user,
-    ]);
+    const user = await User.findOne({ userId: req.body.userId });
 
-    if (!user.length) {
+    if (!user) {
         return res.status(404).json({
-            msg: `No user with the id of ${req.body.user}`,
+            msg: `No user with the id of ${req.body.userId}`,
         });
     } else {
         next();
@@ -246,11 +252,9 @@ async function checkUserExists(req, res, next) {
 }
 
 async function checkPostExists(req, res, next) {
-    const post = await sqlCommand("SELECT * FROM posts WHERE id=?;", [
-        req.params.id,
-    ]);
+    const post = await Post.findOne({ postId: req.params.id });
 
-    if (!post.length) {
+    if (!post) {
         return res.status(404).json({
             msg: `No post with the id of ${req.params.id}`,
         });
