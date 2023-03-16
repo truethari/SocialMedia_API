@@ -29,4 +29,4 @@ function validateComment(comment, notRequried = []) {
 }
 
 module.exports.Comment = Comment;
-module.exports.validateComment = validateComment;
+module.exports.validate = validateComment;

@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
+
 const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
-const { Post, validate } = require("../models/post");
-const { Comment, validateComment } = require("../models/comment");
+const { Post, validate: validatePost } = require("../models/post");
+const { Comment, validate: validateComment } = require("../models/comment");
 const {
     getNewPostId,
     getNewCommentId,
@@ -51,7 +52,7 @@ router.post(
     "/",
     [middleware.auth, middleware.checkUserExists],
     async (req, res) => {
-        const { error } = validate(req.body);
+        const { error } = validatePost(req.body);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
@@ -83,7 +84,7 @@ router.put(
         }
 
         if (req.body.title) {
-            const { error } = validate(req.body, ["userId", "body"]);
+            const { error } = validatePost(req.body, ["userId", "body"]);
 
             if (error) {
                 return res.status(400).send(error.details[0].message);
@@ -102,7 +103,7 @@ router.put(
         }
 
         if (req.body.body) {
-            const { error } = validate(req.body, ["userId", "title"]);
+            const { error } = validatePost(req.body, ["userId", "title"]);
 
             if (error) {
                 return res.status(400).send(error.details[0].message);
@@ -284,9 +285,9 @@ async function checkUserExists(req, res, next) {
         return res.status(404).json({
             msg: `No user with the id of ${req.body.userId}`,
         });
-    } else {
-        next();
     }
+
+    next();
 }
 
 async function checkPostExists(req, res, next) {
@@ -296,9 +297,9 @@ async function checkPostExists(req, res, next) {
         return res.status(404).json({
             msg: `No post with the id of ${req.params.id}`,
         });
-    } else {
-        next();
     }
+
+    next();
 }
 
 async function checkCommentExists(req, res, next) {
