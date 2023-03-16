@@ -49,6 +49,14 @@ router.post("/", auth, async (req, res) => {
         });
     }
 
+    const validEmail = await isEmailExists(req.body.email);
+
+    if (!validEmail) {
+        return res.status(400).json({
+            msg: "Email already exists",
+        });
+    }
+
     let user = new User({
         userId: await getNewUserId(),
         fName: req.body.fName,
@@ -188,5 +196,10 @@ router.delete("/:id", auth, async (req, res) => {
         msg: "User deleted",
     });
 });
+
+async function isEmailExists(email) {
+    const result = await User.findOne({ email: email });
+    return result ? false : true;
+}
 
 module.exports = router;
