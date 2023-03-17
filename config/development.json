@@ -1,9 +1,8 @@
 {
     "db": {
-        "host": "localhost",
-        "username": "root",
-        "password": "",
-        "database": "tests_socialmedia_api"
+        "host": "127.0.0.1",
+        "port": 27017,
+        "name": "socialmedia_api"
     },
     "jwtPrivateKey": "secretKey"
 }
