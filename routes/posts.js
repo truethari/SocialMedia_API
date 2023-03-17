@@ -5,16 +5,12 @@ const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
 const { Post, validate: validatePost } = require("../models/post");
-const { Comment, validate: validateComment } = require("../models/comment");
+const { Comment } = require("../models/comment");
 const {
     getNewPostId,
-    getNewCommentId,
     incrementPostCreated,
     incrementPostModified,
     incrementPostDeleted,
-    incrementCommentCreated,
-    incrementCommentModified,
-    incrementCommentDeleted,
 } = require("../models/data");
 
 const middleware = {
@@ -23,6 +19,8 @@ const middleware = {
     checkPostExists,
     checkCommentExists,
 };
+
+const commentController = require("../controllers/commentController");
 
 router.get("/", async (req, res) => {
     const posts = await Post.find().select("-__v");
@@ -152,61 +150,19 @@ router.delete(
 router.get(
     "/:id/comments",
     [middleware.auth, middleware.checkPostExists],
-    async (req, res) => {
-        const comments = await Comment.find().select("-__v");
-
-        if (!comments) {
-            return res.status(404).json({
-                msg: `No comments with the post id of ${req.params.id}`,
-            });
-        }
-
-        res.json(comments);
-    }
+    async (req, res) => await commentController.allComments(req, res)
 );
 
 router.get(
     "/:id/comments/:commentId",
     [middleware.auth, middleware.checkPostExists],
-    async (req, res) => {
-        const comment = await Comment.findOne({
-            commentId: req.params.commentId,
-        }).select("-__v");
-
-        if (!comment) {
-            return res.status(404).json({
-                msg: `No comment with the id of ${req.params.commentId}`,
-            });
-        }
-
-        res.json(comment);
-    }
+    async (req, res) => await commentController.singleComment(req, res)
 );
 
 router.post(
     "/:id/comments",
     [middleware.auth, middleware.checkPostExists, middleware.checkUserExists],
-    async (req, res) => {
-        const { error } = validateComment(req.body, ["postId"]);
-
-        if (error) {
-            return res.status(400).send({ msg: error.details[0].message });
-        }
-
-        let comment = new Comment({
-            commentId: await getNewCommentId(),
-            postId: req.params.id,
-            userId: req.body.userId,
-            post: req.params.id,
-            body: req.body.body,
-        });
-
-        comment = await comment.save();
-
-        await incrementCommentCreated();
-
-        res.json(comment);
-    }
+    async (req, res) => await commentController.createComment(req, res)
 );
 
 router.put(
@@ -216,34 +172,7 @@ router.put(
         middleware.checkPostExists,
         middleware.checkCommentExists,
     ],
-    async (req, res) => {
-        const { error } = validateComment(req.body, [
-            "userId",
-            "postId",
-            "commentId",
-        ]);
-
-        if (error) {
-            return res.status(400).send(error.details[0].message);
-        }
-
-        const result = await Comment.updateOne(
-            { commentId: req.params.commentId },
-            { body: req.body.body }
-        );
-
-        if (!result) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-
-        await incrementCommentModified();
-
-        res.json({
-            msg: "Comment updated",
-        });
-    }
+    async (req, res) => await commentController.updateComment(req, res)
 );
 
 router.delete(
@@ -253,23 +182,7 @@ router.delete(
         middleware.checkPostExists,
         middleware.checkCommentExists,
     ],
-    async (req, res) => {
-        const result = await Comment.deleteOne({
-            commentId: req.params.commentId,
-        });
-
-        if (!result.deletedCount) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-
-        await incrementCommentDeleted();
-
-        res.json({
-            msg: "Comment deleted",
-        });
-    }
+    async (req, res) => await commentController.deleteComment(req, res)
 );
 
 async function checkUserExists(req, res, next) {
