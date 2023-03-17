@@ -1,5 +1,6 @@
 const { User, validate } = require("../models/user");
 const data = require("../models/data");
+const bcrypt = require("bcrypt");
 
 exports.allUsers = async (req, res) => {
     const users = await User.find().select("-password -__v");
@@ -49,14 +50,15 @@ exports.createUser = async (req, res) => {
         fName: req.body.fName,
         lName: req.body.lName,
         email: req.body.email,
-        password: req.body.password,
+        password: await bcrypt.hash(req.body.password, 10),
     });
 
     user = await user.save();
+    user.password = "protected";
 
     await data.incrementUserCreated();
 
-    res.send(user);
+    res.json(user);
 };
 
 exports.updateUser = async (req, res) => {
@@ -156,9 +158,10 @@ exports.updateUser = async (req, res) => {
         const result = await User.updateOne(
             { _id: userObjectId },
             {
-                password: req.body.password,
+                password: await bcrypt.hash(req.body.password, 10),
             }
         );
+
         if (!result) {
             return res.status(500).json({
                 msg: "Something went wrong",
