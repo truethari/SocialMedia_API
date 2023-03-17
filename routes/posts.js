@@ -4,14 +4,8 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 
 const { User } = require("../models/user");
-const { Post, validate: validatePost } = require("../models/post");
+const { Post } = require("../models/post");
 const { Comment } = require("../models/comment");
-const {
-    getNewPostId,
-    incrementPostCreated,
-    incrementPostModified,
-    incrementPostDeleted,
-} = require("../models/data");
 
 const middleware = {
     auth,
@@ -20,131 +14,33 @@ const middleware = {
     checkCommentExists,
 };
 
+const postController = require("../controllers/postController");
 const commentController = require("../controllers/commentController");
 
-router.get("/", async (req, res) => {
-    const posts = await Post.find().select("-__v");
+router.get("/", async (req, res) => await postController.allPosts(req, res));
 
-    if (!posts) {
-        return res.status(404).json({
-            msg: "No posts found",
-        });
-    }
-
-    res.json(posts);
-});
-
-router.get("/:id", middleware.auth, async (req, res) => {
-    const post = await Post.findOne({ postId: req.params.id }).select("-__v");
-
-    if (!post) {
-        return res.status(404).json({
-            msg: `No post with the id of ${req.params.id}`,
-        });
-    }
-
-    res.json(post);
-});
+router.get(
+    "/:id",
+    middleware.auth,
+    async (req, res) => await postController.singlePost(req, res)
+);
 
 router.post(
     "/",
     [middleware.auth, middleware.checkUserExists],
-    async (req, res) => {
-        const { error } = validatePost(req.body);
-
-        if (error) {
-            return res.status(400).send(error.details[0].message);
-        }
-
-        let post = new Post({
-            postId: await getNewPostId(),
-            userId: req.body.userId,
-            title: req.body.title,
-            body: req.body.body,
-        });
-
-        post = await post.save();
-
-        await incrementPostCreated();
-
-        res.json(post);
-    }
+    async (req, res) => await postController.createPost(req, res)
 );
 
 router.put(
     "/:id",
     [middleware.auth, middleware.checkPostExists],
-    async (req, res) => {
-        if (!req.body.title && !req.body.body) {
-            return res.status(400).json({
-                msg: "Please include a title or body",
-            });
-        }
-
-        if (req.body.title) {
-            const { error } = validatePost(req.body, ["userId", "body"]);
-
-            if (error) {
-                return res.status(400).send(error.details[0].message);
-            }
-
-            const result = await Post.updateOne(
-                { postId: req.params.id },
-                { title: req.body.title }
-            );
-
-            if (!result) {
-                return res.status(500).json({
-                    msg: "Something went wrong",
-                });
-            }
-        }
-
-        if (req.body.body) {
-            const { error } = validatePost(req.body, ["userId", "title"]);
-
-            if (error) {
-                return res.status(400).send(error.details[0].message);
-            }
-
-            const result = await Post.updateOne(
-                { postId: req.params.id },
-                { body: req.body.body }
-            );
-
-            if (!result) {
-                return res.status(500).json({
-                    msg: "Something went wrong",
-                });
-            }
-        }
-
-        await incrementPostModified();
-
-        res.json({
-            msg: "Post updated",
-        });
-    }
+    async (req, res) => await postController.updatePost(req, res)
 );
 
 router.delete(
     "/:id",
     [middleware.auth, middleware.checkPostExists],
-    async (req, res) => {
-        const result = await Post.deleteOne({ postId: req.params.id });
-
-        if (!result.deletedCount) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-
-        await incrementPostDeleted();
-
-        res.json({
-            msg: "Post deleted",
-        });
-    }
+    async (req, res) => await postController.deletePost(req, res)
 );
 
 router.get(
