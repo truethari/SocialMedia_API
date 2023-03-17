@@ -1,205 +1,25 @@
 const express = require("express");
 const router = express.Router();
 
-const { User, validate } = require("../models/user");
-const {
-    getNewUserId,
-    incrementUserCreated,
-    incrementUserModified,
-    incrementUserDeleted,
-} = require("../models/data");
+const userController = require("../controllers/userController");
 
-router.get("/", async (req, res) => {
-    const users = await User.find().select("-password -__v");
+router.get("/", async (req, res) => await userController.allUsers(req, res));
 
-    if (!users.length) {
-        return res.status(404).json({
-            msg: "No users found",
-        });
-    }
+router.get(
+    "/:id",
+    async (req, res) => await userController.singleUser(req, res)
+);
 
-    res.json(users);
-});
+router.post("/", async (req, res) => await userController.createUser(req, res));
 
-router.get("/:id", async (req, res) => {
-    const user = await User.findOne({ userId: req.params.id }).select(
-        "-password -__v"
-    );
+router.put(
+    "/:id",
+    async (req, res) => await userController.updateUser(req, res)
+);
 
-    if (!user) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    }
-
-    res.json(user);
-});
-
-router.post("/", async (req, res) => {
-    const { error } = validate(req.body);
-
-    if (error) {
-        return res.status(400).json({
-            msg: error.details[0].message,
-        });
-    }
-
-    const validEmail = await isEmailExists(req.body.email);
-
-    if (!validEmail) {
-        return res.status(400).json({
-            msg: "Email already exists",
-        });
-    }
-
-    let user = new User({
-        userId: await getNewUserId(),
-        fName: req.body.fName,
-        lName: req.body.lName,
-        email: req.body.email,
-        password: req.body.password,
-    });
-
-    user = await user.save();
-
-    await incrementUserCreated();
-
-    res.send(user);
-});
-
-router.put("/:id", async (req, res) => {
-    let error;
-
-    const userObjectId = await User.findOne({ userId: req.params.id }, "_id");
-
-    if (!userObjectId) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    }
-
-    if (req.body.fName) {
-        error = validate(req.body, ["email", "password"]).error;
-        if (error) {
-            return res.status(400).json({
-                msg: error.details[0].message,
-            });
-        }
-
-        const result = await User.updateOne(
-            { _id: userObjectId },
-            {
-                fName: req.body.fName,
-            }
-        );
-
-        if (!result) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-    }
-
-    if (req.body.lName) {
-        error = validate(req.body, ["fName", "email", "password"]).error;
-
-        if (error) {
-            return res.status(400).json({
-                msg: error.details[0].message,
-            });
-        }
-
-        const result = await User.updateOne(
-            { _id: userObjectId },
-            {
-                lName: req.body.lName,
-            }
-        );
-
-        if (!result) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-    }
-
-    if (req.body.email) {
-        error = validate(req.body, ["fName", "password"]).error;
-        if (error) {
-            return res.status(400).json({
-                msg: error.details[0].message,
-            });
-        }
-
-        const validEmail = await isEmailExists(req.body.email);
-
-        if (!validEmail) {
-            return res.status(400).json({
-                msg: "Email already exists",
-            });
-        }
-
-        const result = await User.updateOne(
-            { _id: userObjectId },
-            {
-                email: req.body.email,
-            }
-        );
-
-        if (!result) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-    }
-
-    if (req.body.password) {
-        error = validate(req.body, ["fName", "email"]).error;
-        if (error) {
-            return res.status(400).json({
-                msg: error.details[0].message,
-            });
-        }
-
-        const result = await User.updateOne(
-            { _id: userObjectId },
-            {
-                password: req.body.password,
-            }
-        );
-        if (!result) {
-            return res.status(500).json({
-                msg: "Something went wrong",
-            });
-        }
-    }
-
-    await incrementUserModified();
-
-    res.json({
-        msg: "User updated",
-    });
-});
-
-router.delete("/:id", async (req, res) => {
-    const result = await User.deleteOne({ userId: req.params.id });
-
-    if (!result.deletedCount) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    }
-
-    await incrementUserDeleted();
-
-    res.send({
-        msg: "User deleted",
-    });
-});
-
-async function isEmailExists(email) {
-    const result = await User.findOne({ email: email });
-    return result ? false : true;
-}
+router.delete(
+    "/:id",
+    async (req, res) => await userController.deleteUser(req, res)
+);
 
 module.exports = router;
