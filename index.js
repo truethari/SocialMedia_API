@@ -1,13 +1,19 @@
+const config = require("config");
 const express = require("express");
 const mongoose = require("mongoose");
+
 const users = require("./routes/users");
 const posts = require("./routes/posts");
 const signin = require("./routes/signin");
 
 const app = express();
 
+const connectionString = `mongodb://${config.get("db.host")}:${config.get(
+    "db.port"
+)}/${config.get("db.name")}`;
+
 mongoose
-    .connect("mongodb://127.0.0.1:27017/socialmedia_api")
+    .connect(connectionString)
     .then(() => {
         console.log("Connected to MongoDB");
     })
