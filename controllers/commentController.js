@@ -1,4 +1,4 @@
-const { Comment, validate: validateComment } = require("../models/comment");
+const { Comment, validate } = require("../models/comment");
 
 const data = require("../models/data");
 
@@ -29,7 +29,7 @@ exports.singleComment = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
-    const { error } = validateComment(req.body, ["postId"]);
+    const { error } = validate(req.body, ["postId"]);
 
     if (error) {
         return res.status(400).send({ msg: error.details[0].message });
@@ -51,11 +51,7 @@ exports.createComment = async (req, res) => {
 };
 
 exports.updateComment = async (req, res) => {
-    const { error } = validateComment(req.body, [
-        "userId",
-        "postId",
-        "commentId",
-    ]);
+    const { error } = validate(req.body, ["userId", "postId", "commentId"]);
 
     if (error) {
         return res.status(400).send(error.details[0].message);

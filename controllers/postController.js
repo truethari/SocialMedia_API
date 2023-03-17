@@ -1,4 +1,4 @@
-const { Post, validate: validatePost } = require("../models/post");
+const { Post, validate } = require("../models/post");
 
 exports.allPosts = async (req, res) => {
     const posts = await Post.find().select("-__v");
@@ -25,7 +25,7 @@ exports.singlePost = async (req, res) => {
 };
 
 exports.createPost = async (req, res) => {
-    const { error } = validatePost(req.body, ["userId"]);
+    const { error } = validate(req.body, ["userId"]);
 
     if (error) {
         return res.status(400).send({ msg: error.details[0].message });
@@ -53,7 +53,7 @@ exports.updatePost = async (req, res) => {
     }
 
     if (req.body.title) {
-        const { error } = validatePost(req.body, ["userId", "body"]);
+        const { error } = validate(req.body, ["userId", "body"]);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
@@ -72,7 +72,7 @@ exports.updatePost = async (req, res) => {
     }
 
     if (req.body.body) {
-        const { error } = validatePost(req.body, ["userId", "title"]);
+        const { error } = validate(req.body, ["userId", "title"]);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
