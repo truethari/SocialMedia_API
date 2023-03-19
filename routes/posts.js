@@ -17,7 +17,11 @@ const middleware = {
 const postController = require("../controllers/postController");
 const commentController = require("../controllers/commentController");
 
-router.get("/", async (req, res) => await postController.allPosts(req, res));
+router.get(
+    "/",
+    middleware.auth,
+    async (req, res) => await postController.allPosts(req, res)
+);
 
 router.get(
     "/:id",
