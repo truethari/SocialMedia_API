@@ -9,6 +9,7 @@ const { Comment } = require("../models/comment");
 
 const middleware = {
     auth,
+    isAuthorized,
     checkUserExists,
     checkPostExists,
     checkCommentExists,
@@ -17,7 +18,11 @@ const middleware = {
 const postController = require("../controllers/postController");
 const commentController = require("../controllers/commentController");
 
-router.get("/", async (req, res) => await postController.allPosts(req, res));
+router.get(
+    "/",
+    middleware.auth,
+    async (req, res) => await postController.allPosts(req, res)
+);
 
 router.get(
     "/:id",
@@ -27,19 +32,19 @@ router.get(
 
 router.post(
     "/",
-    [middleware.auth, middleware.checkUserExists],
+    [middleware.auth, middleware.checkUserExists, middleware.isAuthorized],
     async (req, res) => await postController.createPost(req, res)
 );
 
 router.put(
     "/:id",
-    [middleware.auth, middleware.checkPostExists],
+    [middleware.auth, middleware.checkPostExists, middleware.isAuthorized],
     async (req, res) => await postController.updatePost(req, res)
 );
 
 router.delete(
     "/:id",
-    [middleware.auth, middleware.checkPostExists],
+    [middleware.auth, middleware.checkPostExists, middleware.isAuthorized],
     async (req, res) => await postController.deletePost(req, res)
 );
 
@@ -57,7 +62,12 @@ router.get(
 
 router.post(
     "/:id/comments",
-    [middleware.auth, middleware.checkPostExists, middleware.checkUserExists],
+    [
+        middleware.auth,
+        middleware.checkPostExists,
+        middleware.checkUserExists,
+        middleware.isAuthorized,
+    ],
     async (req, res) => await commentController.createComment(req, res)
 );
 
@@ -67,6 +77,7 @@ router.put(
         middleware.auth,
         middleware.checkPostExists,
         middleware.checkCommentExists,
+        middleware.isAuthorized,
     ],
     async (req, res) => await commentController.updateComment(req, res)
 );
@@ -77,9 +88,22 @@ router.delete(
         middleware.auth,
         middleware.checkPostExists,
         middleware.checkCommentExists,
+        middleware.isAuthorized,
     ],
     async (req, res) => await commentController.deleteComment(req, res)
 );
+
+async function isAuthorized(req, res, next) {
+    const userObjectId = await User.findOne({ userId: req.body.userId }, "_id");
+
+    if (req.user._id.localeCompare(userObjectId._id.toString())) {
+        return res.status(401).json({
+            msg: "Unauthorized",
+        });
+    }
+
+    next();
+}
 
 async function checkUserExists(req, res, next) {
     if (!req.body.userId) {

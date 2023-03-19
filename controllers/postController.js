@@ -1,4 +1,5 @@
 const { Post, validate } = require("../models/post");
+const data = require("../models/data");
 
 exports.allPosts = async (req, res) => {
     const posts = await Post.find().select("-__v");
