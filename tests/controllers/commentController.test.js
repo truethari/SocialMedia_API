@@ -70,7 +70,6 @@ describe("commentController", () => {
                 .post("/api/posts")
                 .set("x-auth-token", token_user_1)
                 .send({
-                    userId: 1,
                     title: "title",
                     body: "content",
                 });
@@ -82,7 +81,6 @@ describe("commentController", () => {
                 .post("/api/posts")
                 .set("x-auth-token", token_user_2)
                 .send({
-                    userId: 2,
                     title: "title",
                     body: "content",
                 });
@@ -107,23 +105,11 @@ describe("commentController", () => {
             expect(res.status).toBe(404);
         });
 
-        it("should return 401 if user try to comment with other user id", async () => {
-            const res = await request(server)
-                .post("/api/posts/1/comments")
-                .set("x-auth-token", token_user_1)
-                .send({
-                    userId: 2,
-                    body: "content",
-                });
-            expect(res.status).toBe(401);
-        });
-
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
                 .post("/api/posts/1/comments")
                 .set("x-auth-token", token_user_1)
                 .send({
-                    userId: 1,
                     body: "content",
                 });
             expect(res.status).toBe(200);
@@ -134,7 +120,6 @@ describe("commentController", () => {
                 .post("/api/posts/1/comments")
                 .set("x-auth-token", token_user_2)
                 .send({
-                    userId: 2,
                     body: "content",
                 });
             expect(res.status).toBe(200);
@@ -191,9 +176,8 @@ describe("commentController", () => {
         it("should return 401 if user try to update with other user id", async () => {
             const res = await request(server)
                 .put("/api/posts/1/comments/1")
-                .set("x-auth-token", token_user_1)
+                .set("x-auth-token", token_user_2)
                 .send({
-                    userId: 2,
                     body: "content",
                 });
             expect(res.status).toBe(401);
@@ -204,7 +188,6 @@ describe("commentController", () => {
                 .put("/api/posts/1/comments/1")
                 .set("x-auth-token", token_user_1)
                 .send({
-                    userId: 1,
                     body: "content",
                 });
             expect(res.status).toBe(200);
@@ -234,20 +217,14 @@ describe("commentController", () => {
         it("should return 401 if user try to delete with other user id", async () => {
             const res = await request(server)
                 .delete("/api/posts/1/comments/1")
-                .set("x-auth-token", token_user_1)
-                .send({
-                    userId: 2,
-                });
+                .set("x-auth-token", token_user_2);
             expect(res.status).toBe(401);
         });
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
                 .delete("/api/posts/1/comments/1")
-                .set("x-auth-token", token_user_1)
-                .send({
-                    userId: 1,
-                });
+                .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });
     });

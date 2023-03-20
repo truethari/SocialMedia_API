@@ -9,10 +9,11 @@ const { Comment } = require("../models/comment");
 
 const middleware = {
     auth,
-    isAuthorized,
+    isPostAuthorized,
     checkUserExists,
     checkPostExists,
     checkCommentExists,
+    isCommentAuthorized,
 };
 
 const postController = require("../controllers/postController");
@@ -38,13 +39,13 @@ router.post(
 
 router.put(
     "/:id",
-    [middleware.auth, middleware.checkPostExists, middleware.isAuthorized],
+    [middleware.auth, middleware.checkPostExists, middleware.isPostAuthorized],
     async (req, res) => await postController.updatePost(req, res)
 );
 
 router.delete(
     "/:id",
-    [middleware.auth, middleware.checkPostExists, middleware.isAuthorized],
+    [middleware.auth, middleware.checkPostExists, middleware.isPostAuthorized],
     async (req, res) => await postController.deletePost(req, res)
 );
 
@@ -62,12 +63,7 @@ router.get(
 
 router.post(
     "/:id/comments",
-    [
-        middleware.auth,
-        middleware.checkPostExists,
-        middleware.checkUserExists,
-        middleware.isAuthorized,
-    ],
+    [middleware.auth, middleware.checkPostExists, middleware.checkUserExists],
     async (req, res) => await commentController.createComment(req, res)
 );
 
@@ -77,7 +73,7 @@ router.put(
         middleware.auth,
         middleware.checkPostExists,
         middleware.checkCommentExists,
-        middleware.isAuthorized,
+        middleware.isCommentAuthorized,
     ],
     async (req, res) => await commentController.updateComment(req, res)
 );
@@ -88,15 +84,27 @@ router.delete(
         middleware.auth,
         middleware.checkPostExists,
         middleware.checkCommentExists,
-        middleware.isAuthorized,
+        middleware.isCommentAuthorized,
     ],
     async (req, res) => await commentController.deleteComment(req, res)
 );
 
-async function isAuthorized(req, res, next) {
+async function isPostAuthorized(req, res, next) {
     const post = await Post.findOne({ postId: req.params.id });
 
     if (post.userId.localeCompare(req.user._id)) {
+        return res.status(401).json({
+            msg: "Unauthorized",
+        });
+    }
+
+    next();
+}
+
+async function isCommentAuthorized(req, res, next) {
+    const comment = await Comment.findOne({ commentId: req.params.commentId });
+
+    if (comment.userId.localeCompare(req.user._id)) {
         return res.status(401).json({
             msg: "Unauthorized",
         });
