@@ -64,6 +64,12 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
     let error;
 
+    if (!req.body.fName && !req.body.lName && !req.body.email) {
+        return res.status(400).json({
+            msg: "Please provide fName or lName or email",
+        });
+    }
+
     const userObjectId = await User.findOne({ userId: req.params.id }, "_id");
 
     if (!userObjectId) {
