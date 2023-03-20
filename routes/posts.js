@@ -96,6 +96,12 @@ router.delete(
 async function isAuthorized(req, res, next) {
     const userObjectId = await User.findOne({ userId: req.body.userId }, "_id");
 
+    if (!userObjectId) {
+        return res.status(404).json({
+            msg: `No user with the id of ${req.params.id}`,
+        });
+    }
+
     if (req.user._id.localeCompare(userObjectId._id.toString())) {
         return res.status(401).json({
             msg: "Unauthorized",
