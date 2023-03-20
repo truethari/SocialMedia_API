@@ -32,7 +32,7 @@ router.get(
 
 router.post(
     "/",
-    [middleware.auth, middleware.checkUserExists, middleware.isAuthorized],
+    [middleware.auth, middleware.checkUserExists],
     async (req, res) => await postController.createPost(req, res)
 );
 
@@ -94,15 +94,9 @@ router.delete(
 );
 
 async function isAuthorized(req, res, next) {
-    const userObjectId = await User.findOne({ userId: req.body.userId }, "_id");
+    const post = await Post.findOne({ postId: req.params.id });
 
-    if (!userObjectId) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    }
-
-    if (req.user._id.localeCompare(userObjectId._id.toString())) {
+    if (post.userId.localeCompare(req.user._id)) {
         return res.status(401).json({
             msg: "Unauthorized",
         });
@@ -112,17 +106,11 @@ async function isAuthorized(req, res, next) {
 }
 
 async function checkUserExists(req, res, next) {
-    if (!req.body.userId) {
-        return res.status(400).json({
-            msg: "Please include a userId",
-        });
-    }
-
-    const user = await User.findOne({ userId: req.body.userId });
+    const user = await User.findOne({ _id: req.user._id });
 
     if (!user) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.body.userId}`,
+        return res.status(401).json({
+            msg: `Invalid token`,
         });
     }
 

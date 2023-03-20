@@ -74,22 +74,9 @@ describe("postController", () => {
 
         it("should return 401 if unauthorized", async () => {
             const res = await request(server).post("/api/posts").send({
-                userId: "3",
                 title: "title",
                 body: "body",
             });
-            expect(res.status).toBe(401);
-        });
-
-        it("should return 401 if logged user tries to create post for another user", async () => {
-            const res = await request(server)
-                .post("/api/posts")
-                .send({
-                    userId: "1",
-                    title: "title",
-                    body: "body",
-                })
-                .set("x-auth-token", token_user_2);
             expect(res.status).toBe(401);
         });
 
@@ -97,7 +84,6 @@ describe("postController", () => {
             const res = await request(server)
                 .post("/api/posts")
                 .send({
-                    userId: "1",
                     title: "title",
                     body: "body",
                 })
@@ -109,7 +95,6 @@ describe("postController", () => {
             const res = await request(server)
                 .post("/api/posts")
                 .send({
-                    userId: "2",
                     title: "title",
                     body: "body",
                 })
@@ -172,7 +157,7 @@ describe("postController", () => {
         it("should return 401 if logged user tries to update post for another user", async () => {
             const res = await request(server)
                 .put("/api/posts/2")
-                .send({ userId: "2", title: "title" })
+                .send({ title: "title" })
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(401);
         });
@@ -180,7 +165,7 @@ describe("postController", () => {
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
                 .put("/api/posts/1")
-                .send({ userId: "1", title: "title" })
+                .send({ title: "title" })
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });
@@ -188,7 +173,7 @@ describe("postController", () => {
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
                 .put("/api/posts/2")
-                .send({ userId: "2", title: "title" })
+                .send({ title: "title" })
                 .set("x-auth-token", token_user_2);
             expect(res.status).toBe(200);
         });
@@ -210,7 +195,6 @@ describe("postController", () => {
         it("should return 401 if logged user tries to delete post for another user", async () => {
             const res = await request(server)
                 .delete("/api/posts/2")
-                .send({ userId: "2" })
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(401);
         });
@@ -218,7 +202,6 @@ describe("postController", () => {
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
                 .delete("/api/posts/1")
-                .send({ userId: "1" })
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });

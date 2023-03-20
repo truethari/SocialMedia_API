@@ -5,7 +5,7 @@ const Post = mongoose.model(
     "Post",
     new mongoose.Schema({
         postId: { type: Number, required: true },
-        userId: { type: Number, required: true },
+        userId: { type: String, required: true },
         title: String,
         body: String,
         datetime: { type: Date, default: Date.now },
@@ -14,9 +14,6 @@ const Post = mongoose.model(
 
 function validatePost(post, notRequried = []) {
     const schema = Joi.object({
-        userId: notRequried.includes("userId")
-            ? Joi.number()
-            : Joi.number().required(),
         title: notRequried.includes("title")
             ? Joi.string()
             : Joi.string().required(),

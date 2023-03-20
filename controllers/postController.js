@@ -26,7 +26,7 @@ exports.singlePost = async (req, res) => {
 };
 
 exports.createPost = async (req, res) => {
-    const { error } = validate(req.body, ["userId"]);
+    const { error } = validate(req.body);
 
     if (error) {
         return res.status(400).send({ msg: error.details[0].message });
@@ -34,7 +34,7 @@ exports.createPost = async (req, res) => {
 
     let post = new Post({
         postId: await data.getNewPostId(),
-        userId: req.body.userId,
+        userId: req.user._id,
         title: req.body.title,
         body: req.body.body,
     });
