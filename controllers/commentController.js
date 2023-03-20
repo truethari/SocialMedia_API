@@ -36,7 +36,7 @@ exports.createComment = async (req, res) => {
     }
 
     let comment = new Comment({
-        commentId: await getNewCommentId(),
+        commentId: await data.getNewCommentId(),
         postId: req.params.id,
         userId: req.body.userId,
         post: req.params.id,
