@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const User = mongoose.model(
     "User",
     new mongoose.Schema({
-        userId: Number,
         fName: { type: String, required: true },
         lName: String,
         email: { type: String, unique: true, required: true },

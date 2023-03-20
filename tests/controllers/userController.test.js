@@ -3,9 +3,13 @@ const config = require("config");
 
 const mongoose = require("mongoose");
 
+const { User } = require("../../models/user");
+
 let server;
 let token_user_1;
 let token_user_2;
+let userObject_1;
+let userObject_2;
 
 function randomEmail(length) {
     let result = "";
@@ -67,11 +71,6 @@ describe("userController", () => {
     });
 
     describe("LOGIN /", () => {
-        // it("should return 400 if request is invalid", async () => {
-        //     const res = await request(server).post("/api/users/login");
-        //     expect(res.status).toBe(400);
-        // });
-
         it("should return 404 if email is not found", async () => {
             const res = await request(server)
                 .post("/api/users/login")
@@ -83,6 +82,8 @@ describe("userController", () => {
         });
 
         it("should return 200 if request is valid", async () => {
+            userObject_1 = await User.findOne({ email: "email@email.com" });
+
             const res = await request(server).post("/api/login").send({
                 email: "email@email.com",
                 password: "12345678",
@@ -92,6 +93,8 @@ describe("userController", () => {
         });
 
         it("should return 200 if request is valid", async () => {
+            userObject_2 = await User.findOne({ email: "email2@email.com" });
+
             const res = await request(server).post("/api/login").send({
                 email: "email2@email.com",
                 password: "12345678",
@@ -102,12 +105,12 @@ describe("userController", () => {
     });
 
     describe("GET /", () => {
-        it("should return 401 if user is not logged in", async () => {
+        it("should return 401 if not authorized", async () => {
             const res = await request(server).get("/api/users");
             expect(res.status).toBe(401);
         });
 
-        it("should return 200 if user is logged in", async () => {
+        it("should return 200 if authorized", async () => {
             const res = await request(server)
                 .get("/api/users")
                 .set("x-auth-token", token_user_1);
@@ -117,20 +120,22 @@ describe("userController", () => {
 
     describe("GET /:id", () => {
         it("should return 401 if not authorized", async () => {
-            const res = await request(server).get("/api/users/1");
+            const res = await request(server).get(
+                "/api/users/" + userObject_1._id
+            );
             expect(res.status).toBe(401);
         });
 
-        it("should return 404 if user is not found", async () => {
+        it("should return 400 if user invalid", async () => {
             const res = await request(server)
                 .get("/api/users/999")
                 .set("x-auth-token", token_user_1);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it("should return 200 if user is found", async () => {
             const res = await request(server)
-                .get("/api/users/1")
+                .get("/api/users/" + userObject_1._id)
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });
@@ -144,43 +149,45 @@ describe("userController", () => {
 
         it("should return 400 if request is invalid", async () => {
             const res = await request(server)
-                .put("/api/users/1")
+                .put("/api/users/" + userObject_1._id)
                 .set("x-auth-token", token_user_1)
                 .send({ name: "1234" });
             expect(res.status).toBe(400);
         });
 
-        it("should return 404 if user is not found", async () => {
+        it("should return 400 if user invalid", async () => {
             const res = await request(server)
                 .put("/api/users/999")
                 .set("x-auth-token", token_user_1);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
     });
 
     describe("DELETE /:id", () => {
         it("should return 401 if not authorized", async () => {
-            const res = await request(server).delete("/api/users/1");
+            const res = await request(server).delete(
+                "/api/users/" + userObject_1._id
+            );
             expect(res.status).toBe(401);
         });
 
         it("should return 401 if not authorized", async () => {
             const res = await request(server)
-                .delete("/api/users/1")
+                .delete("/api/users/" + userObject_1._id)
                 .set("x-auth-token", token_user_2);
             expect(res.status).toBe(401);
         });
 
-        it("should return 404 if user is not found", async () => {
+        it("should return 404 if user invalid", async () => {
             const res = await request(server)
                 .delete("/api/users/999")
                 .set("x-auth-token", token_user_1);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it("should return 200 if user is found", async () => {
             const res = await request(server)
-                .delete("/api/users/1")
+                .delete("/api/users/" + userObject_1._id)
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });

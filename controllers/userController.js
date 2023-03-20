@@ -1,6 +1,8 @@
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+
 const { User, validate } = require("../models/user");
 const data = require("../models/data");
-const bcrypt = require("bcrypt");
 
 exports.allUsers = async (req, res) => {
     const users = await User.find().select("-password -__v");
@@ -15,7 +17,7 @@ exports.allUsers = async (req, res) => {
 };
 
 exports.singleUser = async (req, res) => {
-    const user = await User.findOne({ userId: req.params.id }).select(
+    const user = await User.findOne({ _id: req.params.id }).select(
         "-password -__v"
     );
 
@@ -46,7 +48,6 @@ exports.createUser = async (req, res) => {
     }
 
     let user = new User({
-        userId: await data.getNewUserId(),
         fName: req.body.fName,
         lName: req.body.lName,
         email: req.body.email,
@@ -70,13 +71,7 @@ exports.updateUser = async (req, res) => {
         });
     }
 
-    const userObjectId = await User.findOne({ userId: req.params.id }, "_id");
-
-    if (!userObjectId) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    }
+    const userObjectId = await User.findOne({ _id: req.params.id }, "_id");
 
     if (req.body.fName) {
         error = validate(req.body, ["email", "password"]).error;
@@ -184,12 +179,6 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
     const result = await User.deleteOne({ userId: req.params.id });
-
-    if (!result.deletedCount) {
-        return res.status(404).json({
-            msg: `No user with the id of ${req.params.id}`,
-        });
-    }
 
     await data.incrementUserDeleted();
 
