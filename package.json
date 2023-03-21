@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node index",
         "dev": "node index",
-        "test": "jest --runInBand --detectOpenHandles"
+        "test": "jest --runInBand --forceExit"
     },
     "repository": {
         "type": "git",
