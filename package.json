@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node index",
         "dev": "node index",
-        "test": "jest --runInBand"
+        "test": "jest --runInBand --detectOpenHandles"
     },
     "repository": {
         "type": "git",
