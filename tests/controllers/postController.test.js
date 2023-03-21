@@ -30,7 +30,7 @@ describe("postController", () => {
             const res = await request(server).post("/api/users").send({
                 fName: "name",
                 lName: "name",
-                email: "email@email.com",
+                email: "email4@email.com",
                 password: "12345678",
             });
             expect(res.status).toBe(200);
@@ -40,7 +40,7 @@ describe("postController", () => {
             const res = await request(server).post("/api/users").send({
                 fName: "name",
                 lName: "name",
-                email: "email2@email.com",
+                email: "email5@email.com",
                 password: "12345678",
             });
             expect(res.status).toBe(200);
@@ -50,7 +50,7 @@ describe("postController", () => {
     describe("Login before tasks user 1", () => {
         it("should return 200 if request is valid", async () => {
             const res = await request(server).post("/api/login").send({
-                email: "email@email.com",
+                email: "email4@email.com",
                 password: "12345678",
             });
             token_user_1 = res.body.token;
@@ -59,7 +59,7 @@ describe("postController", () => {
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server).post("/api/login").send({
-                email: "email2@email.com",
+                email: "email5@email.com",
                 password: "12345678",
             });
             token_user_2 = res.body.token;
