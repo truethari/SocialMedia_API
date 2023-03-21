@@ -1,6 +1,6 @@
 # 🗄️ SocialMedia_API
 
-[![tests](https://github.com/truethari/SocialMedia_API/actions/workflows/socialmedia_api.yml/badge.svg)](https://github.com/truethari/SocialMedia_API/actions/workflows/socialmedia_api.yml)
+[![tests](https://github.com/truethari/SocialMedia_API/actions/workflows/socialmedia_api.yml/badge.svg)](https://github.com/truethari/SocialMedia_API/actions/workflows/socialmedia_api.yml) [![codecov](https://codecov.io/gh/truethari/SocialMedia_API/branch/master/graph/badge.svg?token=GDBUT94ZNB)](https://codecov.io/gh/truethari/SocialMedia_API) [![nodejs](https://badges.aleen42.com/src/node.svg)](https://nodejs.org/) [![JavaScript](https://img.shields.io/badge/--F7DF1E?logo=javascript&logoColor=000)](https://www.javascript.com/)
 
 Social Media API is a backend based on ExpressJS let you put users, posts and comments for your social media website
 
