@@ -4,8 +4,7 @@ const mongoose = require("mongoose");
 const Comment = mongoose.model(
     "Comment",
     new mongoose.Schema({
-        commentId: { type: Number, required: true },
-        postId: { type: Number, required: true },
+        postId: { type: String, required: true },
         userId: { type: String, required: true },
         body: String,
         datetime: { type: Date, default: Date.now },
@@ -14,9 +13,6 @@ const Comment = mongoose.model(
 
 function validateComment(comment, notRequried = []) {
     const schema = Joi.object({
-        postId: notRequried.includes("postId")
-            ? Joi.number()
-            : Joi.number().required(),
         body: notRequried.includes("body")
             ? Joi.string()
             : Joi.string().required(),

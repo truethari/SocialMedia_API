@@ -70,7 +70,12 @@ router.get(
 
 router.get(
     "/:id/comments/:commentId",
-    [middleware.auth, middleware.checkPostExists],
+    [
+        middleware.auth,
+        middleware.isPostIdValid,
+        middleware.isCommentIdValid,
+        middleware.checkPostExists,
+    ],
     async (req, res) => await commentController.singleComment(req, res)
 );
 
@@ -90,6 +95,7 @@ router.put(
     [
         middleware.auth,
         middleware.isPostIdValid,
+        middleware.isCommentIdValid,
         middleware.checkPostExists,
         middleware.checkCommentExists,
         middleware.isCommentAuthorized,
@@ -102,6 +108,7 @@ router.delete(
     [
         middleware.auth,
         middleware.isPostIdValid,
+        middleware.isCommentIdValid,
         middleware.checkPostExists,
         middleware.checkCommentExists,
         middleware.isCommentAuthorized,
@@ -142,7 +149,7 @@ async function isPostAuthorized(req, res, next) {
 }
 
 async function isCommentAuthorized(req, res, next) {
-    const comment = await Comment.findOne({ commentId: req.params.commentId });
+    const comment = await Comment.findOne({ _id: req.params.commentId });
 
     if (comment.userId.localeCompare(req.user._id)) {
         return res.status(401).json({
@@ -178,7 +185,7 @@ async function checkPostExists(req, res, next) {
 }
 
 async function checkCommentExists(req, res, next) {
-    const comment = await Comment.findOne({ commentId: req.params.commentId });
+    const comment = await Comment.findOne({ _id: req.params.commentId });
 
     if (!comment) {
         return res.status(404).json({

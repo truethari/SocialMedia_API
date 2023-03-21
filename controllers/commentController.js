@@ -16,7 +16,7 @@ exports.allComments = async (req, res) => {
 
 exports.singleComment = async (req, res) => {
     const comments = await Comment.find({
-        commentId: req.params.commentId,
+        _id: req.params.commentId,
     }).select("-__v");
 
     if (!comments.length) {
@@ -29,14 +29,13 @@ exports.singleComment = async (req, res) => {
 };
 
 exports.createComment = async (req, res) => {
-    const { error } = validate(req.body, ["postId"]);
+    const { error } = validate(req.body);
 
     if (error) {
         return res.status(400).send({ msg: error.details[0].message });
     }
 
     let comment = new Comment({
-        commentId: await data.getNewCommentId(),
         postId: req.params.id,
         userId: req.user._id,
         body: req.body.body,
@@ -50,14 +49,14 @@ exports.createComment = async (req, res) => {
 };
 
 exports.updateComment = async (req, res) => {
-    const { error } = validate(req.body, ["userId", "postId", "commentId"]);
+    const { error } = validate(req.body, ["userId", "postId"]);
 
     if (error) {
         return res.status(400).send(error.details[0].message);
     }
 
     const result = await Comment.updateOne(
-        { commentId: req.params.commentId },
+        { _id: req.params.commentId },
         { body: req.body.body }
     );
 
@@ -76,7 +75,7 @@ exports.updateComment = async (req, res) => {
 
 exports.deleteComment = async (req, res) => {
     const result = await Comment.deleteOne({
-        commentId: req.params.commentId,
+        _id: req.params.commentId,
     });
 
     if (!result.deletedCount) {
