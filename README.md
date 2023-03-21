@@ -1,5 +1,7 @@
 # 🗄️ SocialMedia_API
 
+[![tests](https://github.com/truethari/SocialMedia_API/actions/workflows/socialmedia_api.yml/badge.svg)](https://github.com/truethari/SocialMedia_API/actions/workflows/socialmedia_api.yml)
+
 Social Media API is a backend based on ExpressJS let you put users, posts and comments for your social media website
 
 -   [🔐 Authentication](#🔐-authentication)
