@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const Post = mongoose.model(
     "Post",
     new mongoose.Schema({
-        postId: { type: Number, required: true },
         userId: { type: String, required: true },
         title: String,
         body: String,

@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 const auth = require("../middleware/auth");
 
@@ -9,6 +10,8 @@ const { Comment } = require("../models/comment");
 
 const middleware = {
     auth,
+    isPostIdValid,
+    isCommentIdValid,
     isPostAuthorized,
     checkUserExists,
     checkPostExists,
@@ -27,7 +30,7 @@ router.get(
 
 router.get(
     "/:id",
-    middleware.auth,
+    [middleware.auth, middleware.isPostIdValid],
     async (req, res) => await postController.singlePost(req, res)
 );
 
@@ -39,19 +42,29 @@ router.post(
 
 router.put(
     "/:id",
-    [middleware.auth, middleware.checkPostExists, middleware.isPostAuthorized],
+    [
+        middleware.auth,
+        middleware.isPostIdValid,
+        middleware.checkPostExists,
+        middleware.isPostAuthorized,
+    ],
     async (req, res) => await postController.updatePost(req, res)
 );
 
 router.delete(
     "/:id",
-    [middleware.auth, middleware.checkPostExists, middleware.isPostAuthorized],
+    [
+        middleware.auth,
+        middleware.isPostIdValid,
+        middleware.checkPostExists,
+        middleware.isPostAuthorized,
+    ],
     async (req, res) => await postController.deletePost(req, res)
 );
 
 router.get(
     "/:id/comments",
-    [middleware.auth, middleware.checkPostExists],
+    [middleware.auth, middleware.isPostIdValid, middleware.checkPostExists],
     async (req, res) => await commentController.allComments(req, res)
 );
 
@@ -63,7 +76,12 @@ router.get(
 
 router.post(
     "/:id/comments",
-    [middleware.auth, middleware.checkPostExists, middleware.checkUserExists],
+    [
+        middleware.auth,
+        middleware.isPostIdValid,
+        middleware.checkPostExists,
+        middleware.checkUserExists,
+    ],
     async (req, res) => await commentController.createComment(req, res)
 );
 
@@ -71,6 +89,7 @@ router.put(
     "/:id/comments/:commentId",
     [
         middleware.auth,
+        middleware.isPostIdValid,
         middleware.checkPostExists,
         middleware.checkCommentExists,
         middleware.isCommentAuthorized,
@@ -82,6 +101,7 @@ router.delete(
     "/:id/comments/:commentId",
     [
         middleware.auth,
+        middleware.isPostIdValid,
         middleware.checkPostExists,
         middleware.checkCommentExists,
         middleware.isCommentAuthorized,
@@ -89,8 +109,28 @@ router.delete(
     async (req, res) => await commentController.deleteComment(req, res)
 );
 
+async function isPostIdValid(req, res, next) {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({
+            msg: "Invalid ID",
+        });
+    }
+
+    next();
+}
+
+async function isCommentIdValid(req, res, next) {
+    if (!mongoose.Types.ObjectId.isValid(req.params.commentId)) {
+        return res.status(400).json({
+            msg: "Invalid ID",
+        });
+    }
+
+    next();
+}
+
 async function isPostAuthorized(req, res, next) {
-    const post = await Post.findOne({ postId: req.params.id });
+    const post = await Post.findOne({ _id: req.params.id });
 
     if (post.userId.localeCompare(req.user._id)) {
         return res.status(401).json({
@@ -126,7 +166,7 @@ async function checkUserExists(req, res, next) {
 }
 
 async function checkPostExists(req, res, next) {
-    const post = await Post.findOne({ postId: req.params.id });
+    const post = await Post.findOne({ _id: req.params.id });
 
     if (!post) {
         return res.status(404).json({

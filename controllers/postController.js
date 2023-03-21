@@ -14,7 +14,7 @@ exports.allPosts = async (req, res) => {
 };
 
 exports.singlePost = async (req, res) => {
-    const post = await Post.findOne({ postId: req.params.id }).select("-__v");
+    const post = await Post.findOne({ _id: req.params.id }).select("-__v");
 
     if (!post) {
         return res.status(404).json({
@@ -33,7 +33,6 @@ exports.createPost = async (req, res) => {
     }
 
     let post = new Post({
-        postId: await data.getNewPostId(),
         userId: req.user._id,
         title: req.body.title,
         body: req.body.body,
@@ -54,7 +53,7 @@ exports.updatePost = async (req, res) => {
     }
 
     if (req.body.title) {
-        const { error } = validate(req.body, ["userId", "body"]);
+        const { error } = validate(req.body, ["body"]);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
@@ -73,14 +72,14 @@ exports.updatePost = async (req, res) => {
     }
 
     if (req.body.body) {
-        const { error } = validate(req.body, ["userId", "title"]);
+        const { error } = validate(req.body, ["title"]);
 
         if (error) {
             return res.status(400).send(error.details[0].message);
         }
 
         const result = await Post.updateOne(
-            { postId: req.params.id },
+            { _id: req.params.id },
             { body: req.body.body }
         );
 
@@ -99,7 +98,7 @@ exports.updatePost = async (req, res) => {
 };
 
 exports.deletePost = async (req, res) => {
-    const result = await Post.deleteOne({ postId: req.params.id });
+    const result = await Post.deleteOne({ _id: req.params.id });
 
     if (!result) {
         return res.status(500).json({

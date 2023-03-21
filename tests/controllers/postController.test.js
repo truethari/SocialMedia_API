@@ -1,11 +1,14 @@
 const request = require("supertest");
 const config = require("config");
-
 const mongoose = require("mongoose");
+
+const { Post } = require("../../models/post");
 
 let server;
 let token_user_1;
 let token_user_2;
+let postObject_1;
+let postObject_2;
 
 function clearDatabase() {
     mongoose.connect(config.get("dbConnectionString")).then(() => {
@@ -84,22 +87,26 @@ describe("postController", () => {
             const res = await request(server)
                 .post("/api/posts")
                 .send({
-                    title: "title",
+                    title: "post 1",
                     body: "body",
                 })
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
+
+            postObject_1 = await Post.findOne({ title: "post 1" });
         });
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
                 .post("/api/posts")
                 .send({
-                    title: "title",
+                    title: "post 2",
                     body: "body",
                 })
                 .set("x-auth-token", token_user_2);
             expect(res.status).toBe(200);
+
+            postObject_2 = await Post.findOne({ title: "post 2" });
         });
     });
 
@@ -119,20 +126,22 @@ describe("postController", () => {
 
     describe("GET /:id", () => {
         it("should return 401 if unauthorized", async () => {
-            const res = await request(server).get("/api/posts/1");
+            const res = await request(server).get(
+                "/api/posts/" + postObject_1._id
+            );
             expect(res.status).toBe(401);
         });
 
-        it("should return 404 if post not found", async () => {
+        it("should return 400 if id is invalid", async () => {
             const res = await request(server)
                 .get("/api/posts/999")
                 .set("x-auth-token", token_user_1);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .get("/api/posts/1")
+                .get("/api/posts/" + postObject_1._id)
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });
@@ -141,30 +150,30 @@ describe("postController", () => {
     describe("PUT /:id", () => {
         it("should return 401 if unauthorized", async () => {
             const res = await request(server)
-                .put("/api/posts/1")
+                .put("/api/posts/" + postObject_1._id)
                 .send({ title: "title" });
             expect(res.status).toBe(401);
         });
 
-        it("should return 404 if post not found", async () => {
+        it("should return 400 if id is invalid", async () => {
             const res = await request(server)
                 .put("/api/posts/999")
                 .send({ title: "title" })
                 .set("x-auth-token", token_user_1);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it("should return 401 if logged user tries to update post for another user", async () => {
             const res = await request(server)
-                .put("/api/posts/2")
+                .put("/api/posts/" + postObject_1._id)
                 .send({ title: "title" })
-                .set("x-auth-token", token_user_1);
+                .set("x-auth-token", token_user_2);
             expect(res.status).toBe(401);
         });
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .put("/api/posts/1")
+                .put("/api/posts/" + postObject_1._id)
                 .send({ title: "title" })
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
@@ -172,7 +181,7 @@ describe("postController", () => {
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .put("/api/posts/2")
+                .put("/api/posts/" + postObject_2._id)
                 .send({ title: "title" })
                 .set("x-auth-token", token_user_2);
             expect(res.status).toBe(200);
@@ -181,27 +190,29 @@ describe("postController", () => {
 
     describe("DELETE /:id", () => {
         it("should return 401 if unauthorized", async () => {
-            const res = await request(server).delete("/api/posts/1");
+            const res = await request(server).delete(
+                "/api/posts/" + postObject_1._id
+            );
             expect(res.status).toBe(401);
         });
 
-        it("should return 404 if post not found", async () => {
+        it("should return 400 if id is invalid", async () => {
             const res = await request(server)
                 .delete("/api/posts/999")
                 .set("x-auth-token", token_user_1);
-            expect(res.status).toBe(404);
+            expect(res.status).toBe(400);
         });
 
         it("should return 401 if logged user tries to delete post for another user", async () => {
             const res = await request(server)
-                .delete("/api/posts/2")
+                .delete("/api/posts/" + postObject_2._id)
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(401);
         });
 
         it("should return 200 if request is valid", async () => {
             const res = await request(server)
-                .delete("/api/posts/1")
+                .delete("/api/posts/" + postObject_1._id)
                 .set("x-auth-token", token_user_1);
             expect(res.status).toBe(200);
         });
