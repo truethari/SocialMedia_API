@@ -7,6 +7,7 @@ const posts = require("../routes/posts");
 
 module.exports = function (app) {
     app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
     app.use("/api/users", users);
     app.use("/api/posts", posts);
     app.use("/api/login", login);
